@@ -20,7 +20,7 @@ public class UzuPooledBehaviour : UzuBehaviour
 	private void OnSpawned (UzuGameObjectPool pool)
 	{
 		if (_ownerPool != null) {
-			Debug.LogError("Entity already belongs to a pool!");
+			Debug.LogError ("Entity already belongs to a pool!");
 			return;
 		}	
 		_ownerPool = pool;
@@ -28,12 +28,21 @@ public class UzuPooledBehaviour : UzuBehaviour
 	
 	/// <summary>
 	/// Call when this object is no longer needed and can be returned to the pool.
-	/// If overrided, always call base.Unspawn() as well.
 	/// </summary>
-	public virtual void Unspawn ()
+	public void Unspawn ()
 	{
+		OnUnspawn ();
+		
 		// Unspawn.
 		_ownerPool.Unspawn (this.gameObject);
+	}
+	
+	/// <summary>
+	/// Called during Unspawn.
+	/// Allow derived class to do any cleanup before unspawn occurs.
+	/// </summary>
+	protected virtual void OnUnspawn ()
+	{	
 	}
 	#endregion
 }
