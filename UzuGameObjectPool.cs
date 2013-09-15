@@ -78,7 +78,7 @@ public class UzuGameObjectPool
 			
 			SetActive (result, true);
 			
-			result.SendMessage ("OnSpawned", this, SendMessageOptions.DontRequireReceiver);
+			result.SendMessage ("OnSpawned", this, SendMessageOptions.RequireReceiver);
 		} else {
 			result = _availableObjects.Pop ();
 			
