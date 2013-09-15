@@ -42,7 +42,7 @@ public class UzuUiPanel : UzuBehaviour, UzuUiPanelInterface
 			widget.Initialize (this);
 		}
 		
-		OnInitialize();
+		OnInitialize ();
 		
 		// Deactivate the object just in case it was active during edit mode.
 		// We don't want to call Deactivate, since this triggers the callback.
@@ -56,7 +56,7 @@ public class UzuUiPanel : UzuBehaviour, UzuUiPanelInterface
 	{
 		this.gameObject.SetActive (true);
 		
-		OnActivate();
+		OnActivate ();
 	}
 	
 	/// <summary>
@@ -66,7 +66,12 @@ public class UzuUiPanel : UzuBehaviour, UzuUiPanelInterface
 	{
 		this.gameObject.SetActive (false);
 		
-		OnDeactivate();
+		OnDeactivate ();
+	}
+	
+	public void DoUpdate ()
+	{
+		OnUpdate ();
 	}
 	#endregion
 	#endregion
@@ -82,15 +87,22 @@ public class UzuUiPanel : UzuBehaviour, UzuUiPanelInterface
 	/// <summary>
 	/// Called when the panel is activated.
 	/// </summary>
-	public virtual void OnActivate()
+	public virtual void OnActivate ()
 	{	
 	}
 	
 	/// <summary>
 	/// Called when the panel is deactivated.
 	/// </summary>
-	public virtual void OnDeactivate()
+	public virtual void OnDeactivate ()
 	{
+	}
+	
+	/// <summary>
+	/// Called every frame that this panel is active.
+	/// </summary>
+	public virtual void OnUpdate ()
+	{		
 	}
 
 	public virtual void OnHover (UzuUiWidget widget, bool isOver)

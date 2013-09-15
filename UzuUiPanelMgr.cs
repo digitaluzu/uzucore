@@ -52,7 +52,6 @@ public class UzuUiPanelMgr : UzuBehaviour
 	
 	private void RegisterPanel (string name, UzuUiPanelInterface panel)
 	{
-//		Debug.Log(name);
 		_uiPanelDataHolder [name] = panel;
 
 		// Initialize the panel.
@@ -68,6 +67,14 @@ public class UzuUiPanelMgr : UzuBehaviour
 		//Register all panel
 		foreach (UzuUiPanel panel in managedPanelList) {
 			RegisterPanel (panel.gameObject.name, panel);
+		}
+	}
+	
+	private void Update ()
+	{
+		// Update the current panel.
+		if (_currentPanel != null) {
+			_currentPanel.DoUpdate ();
 		}
 	}
 	#endregion

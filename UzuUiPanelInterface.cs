@@ -22,4 +22,9 @@ public interface UzuUiPanelInterface
 	/// Deactivate this instance.
 	/// </summary>
 	void Deactivate ();
+	
+	/// <summary>
+	/// Called every frame while this panel is active.
+	/// </summary>
+	void DoUpdate ();
 }
