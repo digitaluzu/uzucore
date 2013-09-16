@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Text;
 using System.Collections.Generic;
 
 /// <summary>
@@ -9,10 +10,11 @@ using System.Collections.Generic;
 /// </summary>
 public class UzuGameObjectPool
 {
+	private GameObject _dummyParent;
 	private GameObject _prefab;
 	private Transform _prefabTransform;
-	private Stack<GameObject> _availableObjects;
-	private List<GameObject> _allObjects;
+	private Stack<UzuPooledBehaviour> _availableObjects;
+	private List<UzuPooledBehaviour> _allObjects;
 	
 	public int ActiveObjectCount {
 		get { return _allObjects.Count - _availableObjects.Count; }
@@ -21,9 +23,10 @@ public class UzuGameObjectPool
 	public List<GameObject> ActiveObjects {
 		get {
 			List<GameObject> activeObjects = new List<GameObject> (ActiveObjectCount);
-			foreach (GameObject go in _allObjects) {
-				if (!_availableObjects.Contains (go)) {
-					activeObjects.Add (go);
+			for (int i = 0; i < _allObjects.Count; i++) {
+				UzuPooledBehaviour obj = _allObjects [i];
+				if (!_availableObjects.Contains (obj)) {
+					activeObjects.Add (obj.gameObject);
 				}
 			}
 			return activeObjects;
@@ -32,11 +35,17 @@ public class UzuGameObjectPool
 	
 	public UzuGameObjectPool (GameObject prefab, int initialCapacity)
 	{
+		// Create a parent for group all objects together.
+		{
+			StringBuilder stringBuilder = new StringBuilder (prefab.name);
+			stringBuilder.Append ("Pool");
+			_dummyParent = new GameObject (stringBuilder.ToString ());
+		}
 		_prefab = prefab;
 		_prefabTransform = _prefab.transform;
 		
-		_availableObjects = new Stack<GameObject> (initialCapacity);
-		_allObjects = new List<GameObject> (initialCapacity);
+		_availableObjects = new Stack<UzuPooledBehaviour> (initialCapacity);
+		_allObjects = new List<UzuPooledBehaviour> (initialCapacity);
 		
 		// Pre-allocate our objects.
 		for (int i = 0; i < initialCapacity; ++i) {
@@ -63,51 +72,61 @@ public class UzuGameObjectPool
 	/// </summary>
 	public GameObject Spawn (Vector3 position, Quaternion rotation)
 	{
-		GameObject result;
+		GameObject resultGO;
+		UzuPooledBehaviour resultComponent;
 		
 		if (_availableObjects.Count == 0) {
-			result = GameObject.Instantiate (_prefab, position, rotation) as GameObject;
+			resultGO = GameObject.Instantiate (_prefab, position, rotation) as GameObject;
+			resultComponent = resultGO.GetComponent<UzuPooledBehaviour> ();
 			
-			Transform resultTransform = result.transform;
-			resultTransform.parent = _prefabTransform.parent;
+			if (resultComponent == null) {
+				Debug.LogError ("Pooled object must contain a UzuPooledBehaviour component.");
+				return resultGO;
+			}
+			
+			Transform resultTransform = resultComponent.CachedXform;
+			resultTransform.parent = _dummyParent.transform;
 			resultTransform.localPosition = position;
 			resultTransform.localRotation = rotation;
 			resultTransform.localScale = _prefabTransform.localScale;
 			
-			_allObjects.Add (result);
-			
-			SetActive (result, true);
-			
-			result.SendMessage ("OnSpawned", this, SendMessageOptions.RequireReceiver);
+			_allObjects.Add (resultComponent);
+			resultComponent.AddToPool (this);
 		} else {
-			result = _availableObjects.Pop ();
+			resultComponent = _availableObjects.Pop ();
+			resultGO = resultComponent.gameObject;
 			
-			Transform resultTransform = result.transform;
+			Transform resultTransform = resultComponent.CachedXform;
 			resultTransform.localPosition = position;
 			resultTransform.localRotation = rotation;
-			
-			SetActive (result, true);
 		}
 		
-		return result;
+		// Activate.
+		resultGO.SetActive (true);
+		resultComponent.OnSpawn ();
+		
+		return resultGO;
 	}
 	
 	/// <summary>
 	/// Unspawns a given GameObject and adds it back to the available
 	/// resource pool.
 	/// </summary>
-	public void Unspawn (GameObject target)
+	public void Unspawn (GameObject targetGO)
 	{
-#if DEBUG
-		if (!_allObjects.Contains(target)) {
+		UzuPooledBehaviour targetComponent = targetGO.GetComponent<UzuPooledBehaviour> ();
+		
+#if UNITY_EDITOR
+		if (targetComponent == null || !_allObjects.Contains(targetComponent)) {
 			Debug.LogError("Attempting to Unspawn an object not belonging to this pool!");
 			return;
 		}
-#endif
+#endif // UNITY_EDITOR
 		
-		if (!_availableObjects.Contains (target)) {
-			_availableObjects.Push (target);
-			SetActive (target, false);
+		if (!_availableObjects.Contains (targetComponent)) {
+			targetComponent.OnUnspawn ();
+			targetGO.SetActive (false);
+			_availableObjects.Push (targetComponent);
 		}
 	}
 	
@@ -117,8 +136,8 @@ public class UzuGameObjectPool
 	/// </summary>
 	public void UnspawnAll ()
 	{
-		foreach (GameObject go in _allObjects) {
-			Unspawn (go);
+		for (int i = 0; i < _allObjects.Count; i++) {
+			Unspawn (_allObjects [i].gameObject);
 		}
 	}
 	
@@ -127,21 +146,11 @@ public class UzuGameObjectPool
 	/// </summary>
 	public void DestroyAll ()
 	{
-		foreach (GameObject go in _allObjects) {
-			GameObject.Destroy (go);
+		for (int i = 0; i < _allObjects.Count; i++) {
+			GameObject.Destroy (_allObjects [i].gameObject);
 		}
 		
 		_availableObjects.Clear ();
 		_allObjects.Clear ();
 	}
-	
-	#region Implementation.
-	/// <summary>
-	/// Toggles the "active" state of the target GameObject.
-	/// </summary>
-	private void SetActive (GameObject target, bool state)
-	{
-		target.SetActive(state);
-	}	
-	#endregion
 }

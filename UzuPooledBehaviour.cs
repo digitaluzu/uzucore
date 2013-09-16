@@ -17,7 +17,7 @@ public class UzuPooledBehaviour : UzuBehaviour
 	/// <summary>
 	/// Called when this object is initially allocated and added to a pool.
 	/// </summary>
-	private void OnSpawned (UzuGameObjectPool pool)
+	public void AddToPool (UzuGameObjectPool pool)
 	{
 		if (_ownerPool != null) {
 			Debug.LogError ("Entity already belongs to a pool!");
@@ -31,17 +31,23 @@ public class UzuPooledBehaviour : UzuBehaviour
 	/// </summary>
 	public void Unspawn ()
 	{
-		OnUnspawn ();
-		
 		// Unspawn.
 		_ownerPool.Unspawn (this.gameObject);
 	}
 	
 	/// <summary>
-	/// Called during Unspawn.
+	/// Callback triggered when event is spawn.
+	/// Allow derived class to do any initial setup.
+	/// </summary>
+	public virtual void OnSpawn ()
+	{	
+	}
+	
+	/// <summary>
+	/// Calledback triggered by Unspawn.
 	/// Allow derived class to do any cleanup before unspawn occurs.
 	/// </summary>
-	protected virtual void OnUnspawn ()
+	public virtual void OnUnspawn ()
 	{	
 	}
 	#endregion
