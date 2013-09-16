@@ -162,6 +162,21 @@ public class UzuMath
 	}
 	
 	#region Primitive intersections.
+	/// <summary>
+	/// Given a point p and a circle at point xy with radius r,
+	/// return whether the point intersects the circle.
+	/// </summary>
+	public static bool IntersectPointCircle (Vector2 p, Vector2 xy, float r)
+	{
+		float r2 = r * r;
+		float distSqr = Vector2.SqrMagnitude(p - xy);
+		return distSqr <= r2;
+	}
+	
+	/// <summary>
+	/// Given the line segment ab, and plane p, return whether
+	/// the segment intersects the plane.
+	/// </summary>
 	public static bool IntersectSegmentPlane (Vector3 a, Vector3 b, Plane p, out float t, out Vector3 q)
 	{
 		// Ref: Real-Time Collision Detection
