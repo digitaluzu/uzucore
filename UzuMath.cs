@@ -163,13 +163,13 @@ public class UzuMath
 	
 	#region Primitive intersections.
 	/// <summary>
-	/// Given a point p and a circle at point xy with radius r,
-	/// return whether the point intersects the circle.
+	/// Given a point p and a sphere,
+	/// return whether the point intersects the sphere.
 	/// </summary>
-	public static bool IntersectPointCircle (Vector2 p, Vector2 xy, float r)
+	public static bool IntersectPointSphere (Vector3 p, UzuSphere s)
 	{
-		float r2 = r * r;
-		float distSqr = Vector2.SqrMagnitude(p - xy);
+		float r2 = s.Radius * s.Radius;
+		float distSqr = Vector3.SqrMagnitude(p - s.Center);
 		return distSqr <= r2;
 	}
 	
@@ -260,6 +260,12 @@ public class UzuMath
 	{
 		Vector3 dir = p1 - p0;
 		float length = dir.magnitude;
+		
+		if (Mathf.Approximately(length, 0.0f)) {
+			hitPos = p0;
+			return IntersectPointSphere(p0, s);
+		}
+		
 		dir = dir / length; // Normalize
 		
 		// Perform ray/sphere intersection, and verify t to guarantee
