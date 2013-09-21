@@ -29,10 +29,7 @@ public class UzuFixedList<T>
 	/// </summary>
 	public int Capacity {
 		get {
-			if (_buffer != null) {
-				return _buffer.Length;
-			}
-			return 0;
+			return _buffer.Length;
 		}
 	}
 
@@ -41,10 +38,8 @@ public class UzuFixedList<T>
 	/// </summary>
 	public IEnumerator<T> GetEnumerator ()
 	{
-		if (_buffer != null) {
-			for (int i = 0; i < _size; ++i) {
-				yield return _buffer[i];
-			}
+		for (int i = 0; i < _size; ++i) {
+			yield return _buffer[i];
 		}
 	}
 	
@@ -65,15 +60,6 @@ public class UzuFixedList<T>
 	}
 
 	/// <summary>
-	/// Clear the array and release the used memory.
-	/// </summary>
-	public void Release ()
-	{
-		_size = 0;
-		_buffer = null;
-	}
-
-	/// <summary>
 	/// Add the specified item to the end of the list.
 	/// </summary>
 	public void Add (T item)
@@ -82,13 +68,22 @@ public class UzuFixedList<T>
 	}
 	
 	/// <summary>
+	/// Insert an item at the specified index, pushing the entries back.
+	/// </summary>
+	public void Insert (int index, T item)
+	{
+		for (int i = _size; i > index; --i) {
+			_buffer [i] = _buffer [i - 1];
+		}
+		_buffer [index] = item;
+		++_size;
+	}
+	
+	/// <summary>
 	/// Returns 'true' if the specified item is within the list.
 	/// </summary>
 	public bool Contains (T item)
 	{
-		if (_buffer == null) {
-			return false;
-		}
 		for (int i = 0; i < _size; ++i) {
 			if (_buffer [i].Equals (item)) {
 				return true;
@@ -103,9 +98,6 @@ public class UzuFixedList<T>
 	/// </summary>
 	public int FindIndex (T item)
 	{
-		if (_buffer == null) {
-			return Count;
-		}
 		for (int i = 0; i < _size; ++i) {
 			if (_buffer [i].Equals (item)) {
 				return i;
@@ -120,18 +112,16 @@ public class UzuFixedList<T>
 	/// </summary>
 	public bool Remove (T item)
 	{
-		if (_buffer != null) {
-			EqualityComparer<T> comp = EqualityComparer<T>.Default;
+		EqualityComparer<T> comp = EqualityComparer<T>.Default;
 
-			for (int i = 0; i < _size; ++i) {
-				if (comp.Equals (_buffer [i], item)) {
-					--_size;
-					_buffer [i] = default(T);
-					for (int b = i; b < _size; ++b) {
-						_buffer [b] = _buffer [b + 1];
-					}
-					return true;
+		for (int i = 0; i < _size; ++i) {
+			if (comp.Equals (_buffer [i], item)) {
+				--_size;
+				_buffer [i] = default(T);
+				for (int b = i; b < _size; ++b) {
+					_buffer [b] = _buffer [b + 1];
 				}
+				return true;
 			}
 		}
 		return false;
@@ -142,7 +132,7 @@ public class UzuFixedList<T>
 	/// </summary>
 	public void RemoveAt (int index)
 	{
-		if (_buffer != null && index < _size) {
+		if (index < _size) {
 			--_size;
 			_buffer [index] = default(T);
 			for (int b = index; b < _size; ++b) {
