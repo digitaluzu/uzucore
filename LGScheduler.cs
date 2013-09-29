@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class LGScheduler : MonoBehaviour
+public class LGScheduler : UzuBehaviour
 {
 	public delegate void ScheduledWork ();
 
@@ -11,13 +11,13 @@ public class LGScheduler : MonoBehaviour
 	/// 
 	/// Example usage:
 	/// 	// Prints a message in 3 seconds:
-	/// 	LGScheduler.AddWork(
-	/// 					3.0f,
-	/// 					() => { 
-	///							Debug.Log("Hello World!");
-	///						});
+	/// 	LGScheduler.AddWork( 3.0f, MyFunction );
+	///		
+	///		private void MyFunction () {
+	///			Debug.Log ("Hello World!");
+	///		}
 	/// </summary>
-	public static void AddWork (float delayInSeconds, ScheduledWork scheduledWork)
+	public static void AddWork (float delayInSeconds, System.Action scheduledWork)
 	{
 		if (delayInSeconds <= 0.0f) {
 			Debug.LogWarning ("Work must be scheduled for sometime in the future.");
@@ -35,6 +35,7 @@ public class LGScheduler : MonoBehaviour
 	#region Implementation.
 	#region Singleton implementation.
 	private static LGScheduler _instance;
+
 	public static LGScheduler Instance {
 		get {
 			// Create on demand.
@@ -48,17 +49,19 @@ public class LGScheduler : MonoBehaviour
 	}
 	#endregion
 
-	private class ScheduledWorkImpl
+	private struct ScheduledWorkImpl
 	{
 		public float _delayInSeconds;
 		public float _timeElapsedInSeconds;
-		public ScheduledWork _theWork;
+		public System.Action _theWork;
 	}
 
 	private List<ScheduledWorkImpl> _workList = new List<ScheduledWorkImpl> ();
 
-	protected virtual void Awake ()
+	protected override void Awake ()
 	{
+		base.Awake ();
+		
 		// Only allow single instance to exist.
 		if (_instance != null && _instance != this) {
 			Destroy (gameObject);
@@ -73,7 +76,7 @@ public class LGScheduler : MonoBehaviour
 	{
 		// Process all work.
 		for (int i = 0; i < _workList.Count;) {
-			ScheduledWorkImpl work = _workList[i];
+			ScheduledWorkImpl work = _workList [i];
 			
 			// Progress the work's timer.
 			work._timeElapsedInSeconds += Time.deltaTime;
