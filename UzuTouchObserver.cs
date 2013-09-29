@@ -40,6 +40,19 @@ public class UzuTouchObserver
 	}
 	
 	/// <summary>
+	/// Manually clear all currently active touches.
+	/// </summary>
+	public void ClearTouches ()
+	{
+		for (int i = 0; i < _trackers.Length; i++) {
+			TouchTracker tracker = _trackers [i];
+			if (tracker.IsActive) {
+				DoTrackingEnd (tracker);
+			}
+		}
+	}
+	
+	/// <summary>
 	/// Updates the states of all touches.
 	/// Call once per frame.
 	/// </summary>
@@ -61,21 +74,22 @@ public class UzuTouchObserver
 			// Are we already tracking this finger?
 			TouchTracker tracker = GetExistingTracker (touch.fingerId);
 			
-			// If the tracker for this finger is already existing,
-			// but the touch phase is just beginning, then this is
-			// a different touch event. End the previous event, and detect
-			// a new event.
-			if (tracker != null &&
-				touch.phase == TouchPhase.Began) {
-				DoTrackingEnd (tracker);
-				tracker = null;
-			}
-			
-			// New finger detected - start tracking if possible.
-			if (tracker == null) {				
-				tracker = GetNewTracker ();
+			if (touch.phase == TouchPhase.Began) {
+				// If the tracker for this finger is already existing,
+				// but the touch phase is just beginning, then this is
+				// a different touch event. End the previous event, and detect
+				// a new event.
 				if (tracker != null) {
-					DoTrackingBegin (tracker, touch);
+					DoTrackingEnd (tracker);
+					tracker = null;
+				}
+				
+				// New finger detected - start tracking if possible.
+				if (tracker == null) {				
+					tracker = GetNewTracker ();
+					if (tracker != null) {
+						DoTrackingBegin (tracker, touch);
+					}
 				}
 			}
 			
