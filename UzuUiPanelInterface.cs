@@ -6,6 +6,11 @@ using UnityEngine;
 public interface UzuUiPanelInterface
 {
 	/// <summary>
+	/// Gets the name of this panel.
+	/// </summary>
+	string GetName ();
+	
+	/// <summary>
 	/// Initialize the panel.
 	/// </summary>
 	/// <param name='ownerManager'>

@@ -52,6 +52,12 @@ public class UzuUiPanelMgr : UzuBehaviour
 	
 	private void RegisterPanel (string name, UzuUiPanelInterface panel)
 	{
+#if UNITY_EDITOR
+		if (_uiPanelDataHolder.ContainsKey(name)) {
+			Debug.LogWarning("Panel with name [" + name + "] already exists.");
+		}
+#endif // UNITY_EDITOR
+		
 		_uiPanelDataHolder [name] = panel;
 
 		// Initialize the panel.
@@ -62,11 +68,13 @@ public class UzuUiPanelMgr : UzuBehaviour
 	{
 		base.Awake ();
 
-		//Connect all the child panel to this panelManager
-		UzuUiPanel[] managedPanelList = (UzuUiPanel[])this.gameObject.GetComponentsInChildren<UzuUiPanel> (true);		
-		//Register all panel
-		foreach (UzuUiPanel panel in managedPanelList) {
-			RegisterPanel (panel.gameObject.name, panel);
+		// Register all child panels.
+		MonoBehaviour[] panels = this.gameObject.GetComponentsInChildren<MonoBehaviour> (true);
+		for (int i = 0; i < panels.Length; i++) {
+			UzuUiPanelInterface panel = panels [i] as UzuUiPanelInterface;
+			if (panel != null) {
+				RegisterPanel (panel.GetName (), panel);
+			}
 		}
 	}
 	

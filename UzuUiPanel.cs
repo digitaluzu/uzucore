@@ -28,6 +28,11 @@ public class UzuUiPanel : UzuBehaviour, UzuUiPanelInterface
 	}
 	
 	#region UzuUiPanelInterface implementation.
+	public string GetName ()
+	{
+		return gameObject.name;
+	}
+	
 	/// <summary>
 	/// Initialize this panel.
 	/// Create the link between the panel manager and the 
