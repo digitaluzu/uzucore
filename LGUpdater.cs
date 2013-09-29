@@ -50,7 +50,7 @@ public class LGUpdater : MonoBehaviour
 			}
 			return _instance;
 		}
-		set { LGUtil.SingletonSet<LGUpdater> (ref _instance, value); }
+		set { UzuUtil.SingletonSet<LGUpdater> (ref _instance, value); }
 	}
 	#endregion
 	

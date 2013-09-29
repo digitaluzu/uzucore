@@ -364,7 +364,7 @@ public class LGSoundMgr : MonoBehaviour
 
 	public static LGSoundMgr Instance {
 		get { return _instance; }
-		private set { LGUtil.SingletonSet<LGSoundMgr> (ref _instance, value); }
+		private set { UzuUtil.SingletonSet<LGSoundMgr> (ref _instance, value); }
 	}
 	#endregion
 

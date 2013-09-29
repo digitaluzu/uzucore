@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Miscellaneous services.
 /// </summary>
-public class LGUtil
+public class UzuUtil
 {
 	/// <summary>
 	/// Sets the "instance" variable of a singleton object to a new value.

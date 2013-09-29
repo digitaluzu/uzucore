@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class LGScheduler : UzuBehaviour
+public class UzuScheduler : UzuBehaviour
 {
 	public delegate void ScheduledWork ();
 
@@ -34,18 +34,18 @@ public class LGScheduler : UzuBehaviour
 
 	#region Implementation.
 	#region Singleton implementation.
-	private static LGScheduler _instance;
+	private static UzuScheduler _instance;
 
-	public static LGScheduler Instance {
+	public static UzuScheduler Instance {
 		get {
 			// Create on demand.
 			if (_instance == null) {
 				GameObject go = new GameObject ("LGScheduler");
-				_instance = go.AddComponent<LGScheduler> ();
+				_instance = go.AddComponent<UzuScheduler> ();
 			}
 			return _instance;
 		}
-		private set { LGUtil.SingletonSet<LGScheduler> (ref _instance, value); }
+		private set { UzuUtil.SingletonSet<UzuScheduler> (ref _instance, value); }
 	}
 	#endregion
 

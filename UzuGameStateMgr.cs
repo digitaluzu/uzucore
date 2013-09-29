@@ -58,7 +58,7 @@ public class UzuGameStateMgr : UzuBehaviour
 			}
 			return _instance;
 		}
-		set { LGUtil.SingletonSet<UzuGameStateMgr> (ref _instance, value); }
+		set { UzuUtil.SingletonSet<UzuGameStateMgr> (ref _instance, value); }
 	}
 	#endregion
 	

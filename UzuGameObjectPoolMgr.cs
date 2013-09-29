@@ -23,7 +23,7 @@ public class UzuGameObjectPoolMgr : UzuBehaviour
 
 	private static UzuGameObjectPoolMgr Instance {
 		get { return _instance; }
-		set { LGUtil.SingletonSet<UzuGameObjectPoolMgr> (ref _instance, value); }
+		set { UzuUtil.SingletonSet<UzuGameObjectPoolMgr> (ref _instance, value); }
 	}
 	#endregion
 	

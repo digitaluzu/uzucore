@@ -25,7 +25,7 @@ public class UzuMain : UzuBehaviour
 	public static UzuMain Instance {
 		// Instance is guaranteed to exist, so we do not perform a null check.
 		get { return _instance; }
-		private set { LGUtil.SingletonSet<UzuMain> (ref _instance, value); }
+		private set { UzuUtil.SingletonSet<UzuMain> (ref _instance, value); }
 	}
 	#endregion
 	
