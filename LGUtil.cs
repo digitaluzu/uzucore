@@ -17,35 +17,4 @@ public class LGUtil
 		}
 		instance = newValue;
 	}
-
-	/// <summary>
-	/// Attempts to change the current scene.
-	/// </summary>
-	public static void RequestSceneChange (string sceneName)
-	{
-		// This GO should be released automatically when scene change is completed.
-//		GameObject go = new GameObject ("SceneChangerGO");
-//		LGSceneChanger sceneChanger = go.AddComponent<LGSceneChanger> ();
-//		sceneChanger.RequestSceneChange (sceneName);
-	}
-	
-	public class Device {
-		//@todo: allow access to all device settings through interface. LGDevice? LGUtil.Device?
-		public static bool IsHighResolution()
-		{
-			return Screen.height > TargetScreenHeight;
-		}
-		
-		public static int TargetScreenWidth
-		{
-			get { return 320; }
-//			get { return 480; }
-		}
-		
-		public static int TargetScreenHeight
-		{
-			get { return 480; }
-//			get { return 320; }
-		}
-	}
 }
