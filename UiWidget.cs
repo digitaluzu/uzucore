@@ -5,6 +5,7 @@ namespace Uzu
 	/// <summary>
 	/// Uzu user interface widget.
 	/// </summary>
+	[AddComponentMenu("Uzu/UI Widget")]
 	public class UiWidget : BaseBehaviour
 	{	
 		/// <summary>
