@@ -31,8 +31,7 @@ namespace Uzu
 		#region Singleton implementation.
 		private static Main _instance;
 
-		public static Main Instance {
-			// Instance is guaranteed to exist, so we do not perform a null check.
+		protected static Main Instance {
 			get { return _instance; }
 			private set { Uzu.Util.SingletonSet<Main> (ref _instance, value); }
 		}
