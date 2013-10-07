@@ -32,14 +32,16 @@ namespace Uzu
 		private Dictionary<string, GameObjectPool> _pools = new Dictionary<string, GameObjectPool> ();
 	
 		[System.Serializable]
-		//private class PoolEntry
+			//private class PoolEntry
 		public class PoolEntry //Force to make this public to access form editor?
 		{
-			public PoolEntry(GameObject obj, int ncount){
+			public PoolEntry (GameObject obj, int ncount)
+			{
 				name = obj.name;
 				gameObject = obj;
 				count = ncount;
-			}	
+			}
+
 			public string name = string.Empty;
 			public int count = 0;
 			public GameObject gameObject = null;
@@ -77,7 +79,11 @@ namespace Uzu
 				}
 				
 				// Create the pool.
-				_pools.Add (entry.name, new GameObjectPool (entry.gameObject, entry.count));
+				GameObjectPool pool = new GameObjectPool (entry.gameObject, entry.count);
+				_pools.Add (entry.name, pool);
+				
+				// Add as child to this manager.
+				pool.PoolParent.transform.parent = this.transform;
 			}
 		}
 		

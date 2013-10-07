@@ -12,7 +12,7 @@ namespace Uzu
 	/// </summary>
 	public class GameObjectPool
 	{
-		private GameObject _dummyParent;
+		private GameObject _poolParent;
 		private GameObject _prefab;
 		private Transform _prefabTransform;
 		private Stack<PooledBehaviour> _availableObjects;
@@ -20,6 +20,10 @@ namespace Uzu
 		
 		public int ActiveObjectCount {
 			get { return _allObjects.Count - _availableObjects.Count; }
+		}
+		
+		public GameObject PoolParent {
+			get { return _poolParent; }
 		}
 		
 		public List<GameObject> ActiveObjects {
@@ -39,9 +43,9 @@ namespace Uzu
 		{
 			// Create a parent for group all objects together.
 			{
-				StringBuilder stringBuilder = new StringBuilder (prefab.name);
-				stringBuilder.Append ("Pool");
-				_dummyParent = new GameObject (stringBuilder.ToString ());
+				StringBuilder stringBuilder = new StringBuilder ("UzuPool - ");
+				stringBuilder.Append (prefab.name);
+				_poolParent = new GameObject (stringBuilder.ToString ());
 			}
 			_prefab = prefab;
 			_prefabTransform = _prefab.transform;
@@ -87,7 +91,7 @@ namespace Uzu
 				}
 				
 				Transform resultTransform = resultComponent.CachedXform;
-				resultTransform.parent = _dummyParent.transform;
+				resultTransform.parent = _poolParent.transform;
 				resultTransform.localPosition = position;
 				resultTransform.localRotation = rotation;
 				resultTransform.localScale = _prefabTransform.localScale;
