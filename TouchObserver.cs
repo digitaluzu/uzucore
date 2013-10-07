@@ -15,7 +15,7 @@ namespace Uzu
 	
 		public delegate void OnTouchUpdateDelegate (Touch touch);
 	
-		public delegate void OnTouchEndDelegate (int fingerId);
+		public delegate void OnTouchEndDelegate (int fingerId, Vector2 lastPosition);
 	
 		public OnTouchBeginDelegate OnTouchBegin { get; set; }
 	
@@ -97,10 +97,7 @@ namespace Uzu
 				
 				// Update the tracker.
 				if (tracker != null) {
-					tracker.Update ();
-					if (OnTouchUpdate != null) {
-						OnTouchUpdate (touch);
-					}
+					DoTrackingUpdate (tracker, touch);
 				}
 			}
 			
@@ -123,6 +120,7 @@ namespace Uzu
 		/// </summary>
 		private class TouchTracker
 		{	
+			private Vector2 _lastPosition;
 			private int _fingerId;
 			private bool _isActive = false;
 			private bool _isDirty = false;
@@ -140,15 +138,21 @@ namespace Uzu
 				set { _isDirty = value; }
 			}
 			
-			public void BeginTracking (int fingerId)
-			{
-				_isActive = true;
-				_fingerId = fingerId;
+			public Vector2 LastPosition {
+				get { return _lastPosition; }
 			}
 			
-			public void Update ()
+			public void BeginTracking (Touch touch)
+			{
+				_isActive = true;
+				_fingerId = touch.fingerId;
+				_lastPosition = touch.position;
+			}
+			
+			public void Update (Touch touch)
 			{
 				_isDirty = true;
+				_lastPosition = touch.position;
 			}
 			
 			public void EndTracking ()
@@ -159,16 +163,24 @@ namespace Uzu
 	
 		private void DoTrackingBegin (TouchTracker tracker, Touch touch)
 		{
-			tracker.BeginTracking (touch.fingerId);
+			tracker.BeginTracking (touch);
 			if (OnTouchBegin != null) {
 				OnTouchBegin (touch);
+			}
+		}
+		
+		private void DoTrackingUpdate (TouchTracker tracker, Touch touch)
+		{
+			tracker.Update (touch);
+			if (OnTouchUpdate != null) {
+				OnTouchUpdate (touch);
 			}
 		}
 		
 		private void DoTrackingEnd (TouchTracker tracker)
 		{
 			if (OnTouchEnd != null) {
-				OnTouchEnd (tracker.FingerId);
+				OnTouchEnd (tracker.FingerId, tracker.LastPosition);
 			}
 			tracker.EndTracking ();
 		}
