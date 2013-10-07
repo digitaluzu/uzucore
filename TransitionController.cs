@@ -24,6 +24,16 @@ namespace Uzu
 			
 			_transitions [transitionId] = transition;
 		}
+		
+		/// <summary>
+		/// Gets the registered transition.
+		/// </summary>
+		public TransitionInterface GetTransition (string transitionId)
+		{
+			TransitionInterface transition;
+			_transitions.TryGetValue (transitionId, out transition);
+			return transition;
+		}
 
 		public void DoTransition (string transitionId, System.Action onEndCallback = null)
 		{
@@ -69,9 +79,13 @@ namespace Uzu
 			// Trigger callback.
 			{
 				if (_activeTransitionOnEndCallback != null) {
-					_activeTransitionOnEndCallback ();
-				}				
-				_activeTransitionOnEndCallback = null;
+					// Store in temp variable and set to null before calling the callback,
+					// so that we don't clobber any new callbacks that are set in the actual callback... ^_^
+					System.Action tempEndCallback = _activeTransitionOnEndCallback;
+					_activeTransitionOnEndCallback = null;
+					
+					tempEndCallback ();
+				}
 			}
 		}
 		#endregion
