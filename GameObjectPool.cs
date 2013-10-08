@@ -6,24 +6,11 @@ namespace Uzu
 {
 	/// <summary>
 	/// Class for pooling GameObjects.
-	/// 
-	/// Based loosely on the description here:
-	/// http://vonlehecreative.wordpress.com/2010/01/06/unity-resource-gameobjectpool/
 	/// </summary>
-	public class GameObjectPool
+	public class GameObjectPool : BaseBehaviour
 	{
-		private GameObject _poolParent;
-		private GameObject _prefab;
-		private Transform _prefabTransform;
-		private Stack<PooledBehaviour> _availableObjects;
-		private List<PooledBehaviour> _allObjects;
-		
 		public int ActiveObjectCount {
 			get { return _allObjects.Count - _availableObjects.Count; }
-		}
-		
-		public GameObject PoolParent {
-			get { return _poolParent; }
 		}
 		
 		public List<GameObject> ActiveObjects {
@@ -37,27 +24,6 @@ namespace Uzu
 				}
 				return activeObjects;
 			}
-		}
-		
-		public GameObjectPool (GameObject prefab, int initialCapacity)
-		{
-			// Create a parent for group all objects together.
-			{
-				StringBuilder stringBuilder = new StringBuilder ("UzuPool - ");
-				stringBuilder.Append (prefab.name);
-				_poolParent = new GameObject (stringBuilder.ToString ());
-			}
-			_prefab = prefab;
-			_prefabTransform = _prefab.transform;
-			
-			_availableObjects = new Stack<PooledBehaviour> (initialCapacity);
-			_allObjects = new List<PooledBehaviour> (initialCapacity);
-			
-			// Pre-allocate our objects.
-			for (int i = 0; i < initialCapacity; ++i) {
-				Spawn (Vector3.zero);
-			}
-			UnspawnAll ();
 		}
 			
 		/// <summary>
@@ -159,5 +125,55 @@ namespace Uzu
 			_availableObjects.Clear ();
 			_allObjects.Clear ();
 		}
+		
+		#region Implementation.
+		[SerializeField]
+		private string _poolName;
+		[SerializeField]
+		private int _initialCount;
+		[SerializeField]
+		private GameObject _prefab;
+		private GameObject _poolParent;
+		private Transform _prefabTransform;
+		private Stack<PooledBehaviour> _availableObjects;
+		private List<PooledBehaviour> _allObjects;
+		
+		protected override void Awake ()
+		{
+			base.Awake ();
+			
+			// Create a parent for grouping all objects together.
+			{
+				StringBuilder stringBuilder = new StringBuilder ("UzuPool - ");
+				stringBuilder.Append (_prefab.name);
+				_poolParent = new GameObject (stringBuilder.ToString ());
+				
+				Transform parentXform = _poolParent.transform;
+				parentXform.parent = CachedXform;
+				parentXform.localScale = Vector3.one;
+			}
+			
+			_prefabTransform = _prefab.transform;			
+			_availableObjects = new Stack<PooledBehaviour> (_initialCount);
+			_allObjects = new List<PooledBehaviour> (_initialCount);
+			
+			// Pre-allocate our objects.
+			{
+				for (int i = 0; i < _initialCount; ++i) {
+					Spawn (Vector3.zero);
+				}
+				UnspawnAll ();
+			}
+			
+			// Register.
+			GameObjectPoolMgr.RegisterPool (_poolName, this);
+		}
+		
+		private void OnDestroy ()
+		{
+			// Unregister.
+			GameObjectPoolMgr.UnregisterPool (_poolName);
+		}
+		#endregion
 	}
 }
