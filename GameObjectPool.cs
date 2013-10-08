@@ -48,22 +48,14 @@ namespace Uzu
 			PooledBehaviour resultComponent;
 			
 			if (_availableObjects.Count == 0) {
-				resultGO = GameObject.Instantiate (_prefab, position, rotation) as GameObject;
-				resultComponent = resultGO.GetComponent<PooledBehaviour> ();
-				
-				if (resultComponent == null) {
-					Debug.LogError ("Pooled object must contain a Uzu.PooledBehaviour component.");
-					return resultGO;
+				// Should we automatically grow?
+				if (!_doesGrow) {
+					Debug.LogWarning ("Pool capacity [" + _initialCount + "] reached.");
+					return null;
 				}
 				
-				Transform resultTransform = resultComponent.CachedXform;
-				resultTransform.parent = _poolParent.transform;
-				resultTransform.localPosition = position;
-				resultTransform.localRotation = rotation;
-				resultTransform.localScale = _prefabTransform.localScale;
-				
-				_allObjects.Add (resultComponent);
-				resultComponent.AddToPool (this);
+				resultGO = CreateObject (position, rotation);
+				resultComponent = resultGO.GetComponent<PooledBehaviour> ();
 			} else {
 				resultComponent = _availableObjects.Pop ();
 				resultGO = resultComponent.gameObject;
@@ -133,10 +125,35 @@ namespace Uzu
 		private int _initialCount;
 		[SerializeField]
 		private GameObject _prefab;
+		[SerializeField]
+		private bool _doesGrow = true;
 		private GameObject _poolParent;
 		private Transform _prefabTransform;
 		private Stack<PooledBehaviour> _availableObjects;
 		private List<PooledBehaviour> _allObjects;
+		
+		private GameObject CreateObject (Vector3 position, Quaternion rotation)
+		{
+			GameObject resultGO = GameObject.Instantiate (_prefab, position, rotation) as GameObject;
+			PooledBehaviour resultComponent = resultGO.GetComponent<PooledBehaviour> ();
+			
+			if (resultComponent == null) {
+				Debug.LogError ("Pooled object must contain a Uzu.PooledBehaviour component.");
+				GameObject.Destroy (resultGO);
+				return null;
+			}
+			
+			Transform resultTransform = resultComponent.CachedXform;
+			resultTransform.parent = _poolParent.transform;
+			resultTransform.localPosition = position;
+			resultTransform.localRotation = rotation;
+			resultTransform.localScale = _prefabTransform.localScale;
+			
+			_allObjects.Add (resultComponent);
+			resultComponent.AddToPool (this);
+			
+			return resultGO;
+		}
 		
 		protected override void Awake ()
 		{
@@ -157,12 +174,21 @@ namespace Uzu
 			_availableObjects = new Stack<PooledBehaviour> (_initialCount);
 			_allObjects = new List<PooledBehaviour> (_initialCount);
 			
-			// Pre-allocate our objects.
+			// Pre-allocate our pool.
 			{
+				// Allocate objects.
 				for (int i = 0; i < _initialCount; ++i) {
-					Spawn (Vector3.zero);
+					CreateObject (Vector3.zero, Quaternion.identity);
 				}
-				UnspawnAll ();
+				
+				// Add to pool.
+				for (int i = 0; i < _allObjects.Count; i++) {
+					GameObject targetGO = _allObjects [i].gameObject;
+					targetGO.SetActive (false);
+					
+					PooledBehaviour targetComponent = targetGO.GetComponent<PooledBehaviour> ();
+					_availableObjects.Push (targetComponent);
+				}
 			}
 			
 			// Register.
