@@ -19,6 +19,14 @@ namespace Uzu
 		{
 			return new Vector3 (inVec.x, inVec.y, 0);
 		}
+		
+		/// <summary>
+		/// Returns a vector with the x, y, z components the same.
+		/// </summary>
+		public static Vector3 FloatToVector3 (float inVal)
+		{
+			return new Vector3 (inVal, inVal, inVal);
+		}
 	
 		/// <summary>
 		/// Turns a Vector3 into a Vector2 (drops the z coordinate).
