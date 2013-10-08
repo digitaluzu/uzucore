@@ -164,7 +164,9 @@ namespace Uzu
 				
 				Transform parentXform = _poolParent.transform;
 				parentXform.parent = CachedXform;
+				parentXform.localPosition = Vector3.zero;
 				parentXform.localScale = Vector3.one;
+				parentXform.localRotation = Quaternion.identity;
 			}
 			
 			_prefabTransform = _prefab.transform;			
