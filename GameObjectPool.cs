@@ -38,9 +38,6 @@ namespace Uzu
 		/// <summary>
 		/// Spawn a new GameObject with the given position/rotation.
 		/// Re-uses an object in the pool if available.
-		/// 
-		/// Triggers message OnSpawned( GameObjectPool ) on instantiation
-		/// of GameObject.
 		/// </summary>
 		public GameObject Spawn (Vector3 position, Quaternion rotation)
 		{
