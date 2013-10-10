@@ -12,6 +12,11 @@ namespace Uzu
 		
 		public static void RegisterPool (string poolName, GameObjectPool pool)
 		{
+			// Ignore empty string pools.
+			if (string.IsNullOrEmpty (poolName)) {
+				return;
+			}
+			
 			if (_pools.ContainsKey (poolName)) {
 				Debug.LogError ("Pool [" + poolName + "] already exists.");
 				return;

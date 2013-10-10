@@ -34,7 +34,9 @@ namespace Uzu
 		public void Unspawn ()
 		{
 			// Unspawn.
-			_ownerPool.Unspawn (this.gameObject);
+			if (_ownerPool != null) {
+				_ownerPool.Unspawn (this.gameObject);
+			}
 		}
 		
 		/// <summary>
