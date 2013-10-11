@@ -93,6 +93,14 @@ namespace Uzu
 		}
 		
 		/// <summary>
+		/// Generates a random vector on a unit circle.
+		/// </summary>
+		public static Vector2 RandomOnUnitCircle ()
+		{
+			return RadiansToDirectionVector2 (Random.value * TWO_PI);
+		}
+		
+		/// <summary>
 		/// Converts an angle into a direction around a unit circle.
 		/// </summary>
 		public static Vector3 RadiansToDirectionVector (float angleInRadians)
