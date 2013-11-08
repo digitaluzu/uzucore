@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Uzu
 {
-	public struct VectorI3 : IEquatable<LGVectorI3>
+	public struct VectorI3 : IEquatable<VectorI3>
 	{
 		#region Constants
 		public static readonly VectorI3 one = new VectorI3 (1, 1, 1);
@@ -377,7 +377,7 @@ namespace Uzu
 		}
 		
 		#region IEquatable interface.
-		public bool Equals (LGVectorI3 v)
+		public bool Equals (VectorI3 v)
 		{
 			return this.x == v.x && this.y == v.y && this.z == v.z;
 		}
@@ -385,8 +385,8 @@ namespace Uzu
 		
 		public override bool Equals (object obj)
 		{
-			if (obj.GetType () == typeof(LGVectorI3)) {
-				return Equals ((LGVectorI3)obj);
+			if (obj.GetType () == typeof(VectorI3)) {
+				return Equals ((VectorI3)obj);
 			}
 	
 			return false;
