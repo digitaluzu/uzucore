@@ -8,6 +8,12 @@ namespace Uzu
 	/// </summary>
 	public class PerfView : BaseBehaviour
 	{
+		public float TargetFrameRate {
+			get { return _targetFrameRate; }
+			set { _targetFrameRate = value; }
+		}
+
+		#region Implementation.
 		[SerializeField]
 		private GUIStyle _guiStyle;
 		[SerializeField]
@@ -102,5 +108,6 @@ namespace Uzu
 			float lineOffset = _guiStyle.lineHeight;
 			_displayRect.y += lineOffset;
 		}
+		#endregion
 	}
 }
