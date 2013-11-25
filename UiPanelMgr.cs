@@ -15,6 +15,13 @@ namespace Uzu
 	/// </summary>
 	public class UiPanelMgr : BaseBehaviour
 	{
+		public delegate void OnPanelChangeDelegate (PanelChangeContext context);
+
+		/// <summary>
+		/// Callback that is trigger when the current panel is changed.
+		/// </summary>
+		public event OnPanelChangeDelegate OnPanelChange;
+
 		/// <summary>
 		/// Changes the current panel to the specified panel id.
 		/// </summary>
@@ -22,12 +29,25 @@ namespace Uzu
 		{
 			UiPanelInterface panel;
 			if (_uiPanelDataHolder.TryGetValue (panelId, out panel)) {
-				if (_currentPanel != null) {
-					_currentPanel.Deactivate ();
+				UiPanelInterface prevPanel = _currentPanel;
+
+				if (prevPanel != null) {
+					prevPanel.Deactivate ();
 				}
+
 				_currentPanel = panel;
 				_currentPanelId = panelId;
 				_currentPanel.Activate ();
+
+				// Trigger callback.
+				{
+					if (OnPanelChange != null) {
+						PanelChangeContext context = new PanelChangeContext();
+						context.PreviousPanel = prevPanel;
+						context.CurrentPanel = _currentPanel;
+						OnPanelChange(context);
+					}
+				}
 			} else {
 				Debug.LogError ("Unable to activate a panel that is not registered: " + panelId);
 			}
