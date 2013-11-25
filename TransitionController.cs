@@ -35,6 +35,10 @@ namespace Uzu
 			return transition;
 		}
 
+		public bool IsTransitionActive {
+			get { return _activeTransition != null; }
+		}
+
 		public void DoTransition (string transitionId, System.Action onEndCallback = null)
 		{
 			// If a transition is already active, force it to end.
