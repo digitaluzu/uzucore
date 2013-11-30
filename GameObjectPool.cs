@@ -9,8 +9,18 @@ namespace Uzu
 	/// </summary>
 	public class GameObjectPool : BaseBehaviour
 	{
+		/// <summary>
+		/// The total # of objects that are currently being utilized.
+		/// </summary>
 		public int ActiveObjectCount {
 			get { return _allObjects.Count - _availableObjects.Count; }
+		}
+
+		/// <summary>
+		/// The total # of objects that this pool can currently accomodate without growing.
+		/// </summary>
+		public int Capacity {
+			get { return _allObjects.Count; }
 		}
 		
 		public List<GameObject> ActiveObjects {
@@ -83,6 +93,9 @@ namespace Uzu
 				return;
 			}
 	#endif // UNITY_EDITOR
+
+			// Reset parent in case the object was moved by the user.
+			targetComponent.CachedXform.parent = _poolParentTransform;
 			
 			if (!_availableObjects.Contains (targetComponent)) {
 				targetComponent.OnUnspawn ();
@@ -124,7 +137,7 @@ namespace Uzu
 		private GameObject _prefab;
 		[SerializeField]
 		private bool _doesGrow = true;
-		private GameObject _poolParent;
+		private Transform _poolParentTransform;
 		private Transform _prefabTransform;
 		private Stack<PooledBehaviour> _availableObjects;
 		private List<PooledBehaviour> _allObjects;
@@ -141,7 +154,7 @@ namespace Uzu
 			}
 			
 			Transform resultTransform = resultComponent.CachedXform;
-			resultTransform.parent = _poolParent.transform;
+			resultTransform.parent = _poolParentTransform;
 			resultTransform.localPosition = position;
 			resultTransform.localRotation = rotation;
 			resultTransform.localScale = _prefabTransform.localScale;
@@ -160,13 +173,13 @@ namespace Uzu
 			{
 				StringBuilder stringBuilder = new StringBuilder ("UzuPool - ");
 				stringBuilder.Append (_prefab.name);
-				_poolParent = new GameObject (stringBuilder.ToString ());
-				
-				Transform parentXform = _poolParent.transform;
-				parentXform.parent = CachedXform;
-				parentXform.localPosition = Vector3.zero;
-				parentXform.localScale = Vector3.one;
-				parentXform.localRotation = Quaternion.identity;
+				GameObject poolParent = new GameObject (stringBuilder.ToString ());
+				_poolParentTransform = poolParent.transform;
+
+				_poolParentTransform.parent = CachedXform;
+				_poolParentTransform.localPosition = Vector3.zero;
+				_poolParentTransform.localScale = Vector3.one;
+				_poolParentTransform.localRotation = Quaternion.identity;
 			}
 			
 			_prefabTransform = _prefab.transform;			
