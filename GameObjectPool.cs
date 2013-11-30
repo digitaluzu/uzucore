@@ -189,15 +189,6 @@ namespace Uzu
 					_availableObjects.Push (targetComponent);
 				}
 			}
-			
-			// Register.
-			GameObjectPoolMgr.RegisterPool (_poolName, this);
-		}
-		
-		private void OnDestroy ()
-		{
-			// Unregister.
-			GameObjectPoolMgr.UnregisterPool (_poolName);
 		}
 		#endregion
 	}
