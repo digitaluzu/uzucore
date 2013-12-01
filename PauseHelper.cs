@@ -1,25 +1,25 @@
 using UnityEngine;
-using System.Collections.Generic;
 
 namespace Uzu
 {
 	/// <summary>
-	/// Allows generic pausing through string-based tags.
-	/// By using tags, it allows us to have certain functionality
+	/// Allows generic pausing through bit flags.
+	/// By using flags, it allows us to have certain functionality
 	/// paused, while other functionality continues to update.
 	/// 
 	/// Example:
 	///   Uzu.PauseHelper pauseObject = new Uzu.PauseHelper();
 	/// 
-	///   // ...
+	///   // Define:
+	///   const int BACKGROUND_LAYER = 1 << 0;
 	/// 
 	///	  // From GUI button:
-	///   pauseObject.Pause("BackgroundLayer");
+	///   pauseObject.Pause(BACKGROUND_LAYER);
 	/// 
 	///   // ...
 	/// 
 	///   // From background layer (Update()):
-	///   if (pauseObject.IsPaused("BackgroundLayer")) {
+	///   if (pauseObject.IsPaused(BACKGROUND_LAYER)) {
 	///        return;
 	///   }
 	///   
@@ -27,33 +27,39 @@ namespace Uzu
 	public class PauseHelper
 	{
 		/// <summary>
-		/// Pause the specified tag.
+		/// Pause the specified flag.
 		/// </summary>
-		public void Pause (string tag)
+		public void Pause (int flag)
 		{
-			if (!_pauseTags.Contains (tag)) {
-				_pauseTags.Add (tag);
-			}
+			_flags |= flag;
 		}
 		
 		/// <summary>
-		/// Unpause the specified tag.
+		/// Unpause the specified flag.
 		/// </summary>
-		public void Unpause (string tag)
+		public void Unpause (int flag)
 		{
-			_pauseTags.Remove (tag);
+			_flags &= ~flag;
+		}
+
+		/// <summary>
+		/// Unpause all flags.
+		/// </summary>
+		public void UnpauseAll ()
+		{
+			_flags = 0;
 		}
 		
 		/// <summary>
-		/// Determines whether the specified tag is paused.
+		/// Determines whether the specified flag is paused.
 		/// </summary>
-		public bool IsPaused (string tag)
+		public bool IsPaused (int flag)
 		{
-			return _pauseTags.Contains (tag);
+			return (_flags & flag) != 0;
 		}
 		
 		#region Implementation.
-		private HashSet<string> _pauseTags = new HashSet<string> ();
+		private int _flags = 0;
 		#endregion
 	}
 }
