@@ -130,8 +130,6 @@ namespace Uzu
 		
 		#region Implementation.
 		[SerializeField]
-		private string _poolName;
-		[SerializeField]
 		private int _initialCount;
 		[SerializeField]
 		private GameObject _prefab;
