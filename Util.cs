@@ -19,5 +19,29 @@ namespace Uzu
 			}
 			instance = newValue;
 		}
+
+#if UNITY_IPHONE
+		/// <summary>
+		/// Gets the iOS major version #.
+		/// Example: iOS 7.0.1 returns 7.
+		/// </summary>
+		public static int GetMajorVersion_iOS ()
+		{
+			// String in the form of: iPhone OS 6.1
+			string osString = SystemInfo.operatingSystem;
+			
+			string versionString = osString.Replace("iPhone OS ", "");
+			string[] tmpStrings = versionString.Split ('.');
+			
+			if (tmpStrings.Length == 0) {
+				Debug.LogWarning ("Invalid version string.");
+				return -1;
+			}
+			
+			string majorVersionString = tmpStrings [0];
+			
+			return System.Convert.ToInt32 (majorVersionString);
+		}
+#endif // UNITY_IPHONE
 	}
 }
