@@ -94,10 +94,11 @@ namespace Uzu
 						}
 					}
 				}
-				
-				// Update the tracker.
-				if (tracker != null) {
-					DoTrackingUpdate (tracker, touch);
+				else {
+					// Update the tracker.
+					if (tracker != null) {
+						DoTrackingUpdate (tracker, touch);
+					}
 				}
 			}
 			
@@ -145,6 +146,7 @@ namespace Uzu
 			public void BeginTracking (Touch touch)
 			{
 				_isActive = true;
+				_isDirty = true;
 				_fingerId = touch.fingerId;
 				_lastPosition = touch.position;
 			}
