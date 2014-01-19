@@ -20,6 +20,29 @@ namespace Uzu
 			instance = newValue;
 		}
 
+		/// <summary>
+		/// Finds the specified component on the game object or one of its parents.
+		/// </summary>
+		public static T FindInParents<T> (GameObject go) where T : Component
+		{
+			if (go == null) {
+				return null;
+			}
+
+			object comp = go.GetComponent<T>();
+			
+			if (comp == null) {
+				Transform t = go.transform.parent;
+				
+				while (t != null && comp == null) {
+					comp = t.gameObject.GetComponent<T>();
+					t = t.parent;
+				}
+			}
+
+			return (T)comp;
+		}
+
 #if UNITY_IPHONE
 		/// <summary>
 		/// Gets the iOS major version #.
