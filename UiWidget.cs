@@ -7,11 +7,24 @@ namespace Uzu
 	/// </summary>
 	[AddComponentMenu("Uzu/UI Widget")]
 	public class UiWidget : BaseBehaviour
-	{	
+	{
 		/// <summary>
 		/// The _owner panel of this widget.
 		/// </summary>
 		private UiPanel _ownerPanel;
+
+		private void Start ()
+		{
+			// Owner panel should have been added during Awake.
+			// If owner is not set yet (this object was added dynamically during run-time), then
+			// we need to find the owner manually.
+			if (_ownerPanel == null) {
+				_ownerPanel = Uzu.Util.FindInParents <UiPanel> (this.gameObject);
+				if (_ownerPanel == null) {
+					Debug.LogWarning ("UiWidget [" + this.name + "] does not belong to a panel.");
+				}
+			}
+		}
 		
 		/// <summary>
 		/// Initialize this widget and set the connection to the owner panel.
