@@ -83,8 +83,10 @@ namespace Uzu
 					source.loop = options.Loop;
 					source.transform.localPosition = options.Position;
 
+					sourceInfo.ClipId = clipId;
+					sourceInfo.MaxVolume = options.MaxVolume;
+
 					if (options.FadeInTime > 0.0f) {
-						sourceInfo.MaxVolume = options.MaxVolume;
 						sourceInfo.VolumeFluctuationSpeed = sourceInfo.MaxVolume / options.FadeInTime;
 						source.volume = 0.0f;
 					}
@@ -124,6 +126,16 @@ namespace Uzu
 			}
 		}
 
+		public string GetClipId (AudioHandle handle)
+		{
+			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
+			if (sourceInfo != null) {
+				return sourceInfo.ClipId;
+			}
+
+			return string.Empty;
+		}
+
 		public void SetPitch (AudioHandle handle, float pitch)
 		{
 			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
@@ -158,6 +170,11 @@ namespace Uzu
 			public int HandleId;
 
 			/// <summary>
+			/// The clipId used to create this source.
+			/// </summary>
+			public string ClipId;
+
+			/// <summary>
 			/// The AudioSource that this info is referring to.
 			/// </summary>
 			public AudioSource Source;
@@ -180,6 +197,7 @@ namespace Uzu
 			public void Reset ()
 			{
 				HandleId = AudioHandle.INVALID_ID;
+				ClipId = string.Empty;
 				Source = null;
 				VolumeFluctuationSpeed = 0.0f;
 				MaxVolume = 1.0f;
