@@ -8,8 +8,14 @@ namespace Uzu
 	/// </summary>
 	public struct AudioControllerConfig
 	{
+		/// <summary>
+		/// The max # of audio sources that this controller can handle.
+		/// </summary>
 		public int AudioSourceMaxCount { get; set; }
-		
+
+		/// <summary>
+		/// Reference to the loader used to load this controller's audio clips.
+		/// </summary>
 		public AudioLoader AudioLoader { get; set; }
 	}
 	
@@ -22,7 +28,8 @@ namespace Uzu
 		{
 			public bool Loop;
 			public Vector3 Position;
-			public float Volume;
+//			public float Volume;
+			public float FadeInTime;
 		}
 		
 		/// <summary>
@@ -34,13 +41,18 @@ namespace Uzu
 			{
 				int maxCount = Mathf.Max (1, config.AudioSourceMaxCount);
 				_availableSources = new FixedList<AudioSource> (maxCount);
-				_activeSources = new FixedList<AudioSource> (maxCount);
+				_availableSourceInfoIndices = new FixedList<int> (maxCount);
+				_activeSourceInfoIndices = new FixedList<int> (maxCount);
+				_sourceInfos = new FixedList<AudioSourceInfo> (maxCount);
 				for (int i = 0; i < maxCount; i++) {
 					GameObject go = new GameObject ("AudioSource_" + i);
 					Transform xform = go.transform;
 					xform.parent = this.CachedXform;
 					AudioSource audioSource = go.AddComponent<AudioSource> ();
 					ReturnSourceToPool (audioSource);
+
+					_availableSourceInfoIndices.Add (i);
+					_sourceInfos.Add (new AudioSourceInfo ());
 				}
 			}
 			
@@ -50,36 +62,113 @@ namespace Uzu
 				Debug.LogError ("AudioLoader not set!");
 			}
 		}
-		
-		public void Play (string id, PlaySettings settings)
+
+		public bool IsHandleValid (AudioHandle handle)
 		{
-			AudioClip clip = GetClip (id);
+			return GetSourceInfo (handle) != null;
+		}
+		
+		public AudioHandle Play (string clipId, PlaySettings settings)
+		{
+			AudioClip clip = GetClip (clipId);
 			if (clip != null) {
-				AudioSource source = GetSource ();
-				if (source != null) {
+				AudioHandle handle = GetSource ();
+				AudioSourceInfo sourceInfo = GetSourceInfo (handle);
+				if (sourceInfo != null) {
+					AudioSource source = sourceInfo.Source;
 					source.clip = clip;
 					source.loop = settings.Loop;
 					source.transform.localPosition = settings.Position;
-					source.volume = settings.Volume;
+
+					// TODO: ? use default channel volume
+					//source.volume = settings.Volume;
+
+					if (settings.FadeInTime > 0.0f) {
+						float todoVolumeMax = 1.0f;
+						sourceInfo.VolumeFluctuationSpeed = todoVolumeMax / settings.FadeInTime;
+						source.volume = 0.0f;
+					}
+
 					source.Play ();
 				}
+
+				return handle;
 			}
+
+			return new AudioHandle ();
 		}
 		
-		public bool IsPlaying (int channel)
+		public bool IsPlaying (AudioHandle handle)
 		{
+			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
+			if (sourceInfo != null) {
+				return sourceInfo.Source.isPlaying;
+			}
+
 			return false;
 		}
-		
-		public void Stop (int channel)
+
+		public void Stop (AudioHandle handle, float fadeOutTime = 0.0f)
 		{
-			
+			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
+			if (sourceInfo != null) {
+				if (fadeOutTime > 0.0f) {
+					sourceInfo.VolumeFluctuationSpeed = -sourceInfo.Source.volume / fadeOutTime;
+				}
+				else {
+					sourceInfo.Source.Stop ();
+				}
+			}
 		}
 		
 		#region Implementation.
 		private AudioLoader _audioLoader;
 		private FixedList<AudioSource> _availableSources;
-		private FixedList<AudioSource> _activeSources;
+		private FixedList<int> _availableSourceInfoIndices;
+		private FixedList<int> _activeSourceInfoIndices;
+		private FixedList<AudioSourceInfo> _sourceInfos;
+
+		private class AudioSourceInfo
+		{
+			/// <summary>
+			/// Unique identifier used to reverse-lookup this source info
+			/// to make sure it is actually valid.
+			/// </summary>
+			public int HandleId;
+
+			/// <summary>
+			/// The AudioSource that this info is referring to.
+			/// </summary>
+			public AudioSource Source;
+
+//			public int ChannelIndex;
+			public float VolumeFluctuationSpeed;
+
+			public AudioSourceInfo ()
+			{
+				Reset ();
+			}
+
+			public void Reset ()
+			{
+				Source = null;
+				VolumeFluctuationSpeed = 0.0f;
+			}
+		}
+
+		#region Unique id generation.
+		/// <summary>
+		/// Handle counter.
+		/// Start from 1 since 0 is an invalid id.
+		/// </summary>
+		private int HANDLE_ID_CNT = 1;
+
+		private int CreateHandleId ()
+		{
+			// GUID could also be used, but this seems fine for now.
+			return HANDLE_ID_CNT++;
+		}
+		#endregion
 		
 		private AudioClip GetClip (string clipId)
 		{
@@ -96,19 +185,55 @@ namespace Uzu
 			return clip;
 		}
 		
-		private AudioSource GetSource ()
+		private AudioHandle GetSource ()
 		{
-			if (_availableSources.Count > 0) {
-				int index = _availableSources.Count - 1;
-				AudioSource source = _availableSources [index];
-				_availableSources.RemoveAt (index);
-				source.gameObject.SetActive (true);
-				_activeSources.Add (source);
-				return source;
+			if (_availableSourceInfoIndices.Count > 0) {
+				int index = _availableSourceInfoIndices.Count - 1;
+
+				// Get a source.
+				AudioSource source = GetSourceFromPool (index);
+
+				// Get a source info index.
+				int infoIndex = _availableSourceInfoIndices [index];
+				_availableSourceInfoIndices.RemoveAt (index);
+				_activeSourceInfoIndices.Add (infoIndex);
+
+				// Set up the source info.
+				AudioSourceInfo sourceInfo = _sourceInfos [infoIndex];
+				Uzu.Dbg.Assert (sourceInfo.Source == null);
+				sourceInfo.Source = source;
+				Uzu.Dbg.Assert (sourceInfo.Source != null);
+
+				int handleId = CreateHandleId ();
+				sourceInfo.HandleId = handleId;
+
+				return new AudioHandle (handleId, infoIndex);
 			}
 			
 			Debug.LogWarning ("No AudioSources available.");
+			return new AudioHandle ();
+		}
+
+		private AudioSourceInfo GetSourceInfo (AudioHandle handle)
+		{
+			if (handle.Id != AudioHandle.INVALID_ID) {
+				AudioSourceInfo sourceInfo = _sourceInfos [handle.Index];
+				
+				// Verify handle integrity.
+				if (sourceInfo.HandleId == handle.Id) {
+					return sourceInfo;
+				}
+			}
+			
 			return null;
+		}
+
+		private AudioSource GetSourceFromPool (int index)
+		{
+			AudioSource source = _availableSources [index];
+			_availableSources.RemoveAt (index);
+			source.gameObject.SetActive (true);
+			return source;
 		}
 		
 		private void ReturnSourceToPool (AudioSource source)
@@ -119,14 +244,74 @@ namespace Uzu
 		
 		private void Update ()
 		{
-			// Clean up finished sounds and return to available pool.
+			// Fade in / out processing.
 			{
-				for (int i = _activeSources.Count - 1; i >= 0; i--) {
-					AudioSource source = _activeSources [i];
-					if (!source.isPlaying) {
-						_activeSources.RemoveAt (i);
-						ReturnSourceToPool (source);
+				for (int i = 0; i < _activeSourceInfoIndices.Count; i++) {
+					AudioSourceInfo sourceInfo = _sourceInfos [_activeSourceInfoIndices [i]];
+
+					// No change in volume - skip.
+					if (Mathf.Approximately (sourceInfo.VolumeFluctuationSpeed, 0.0f)) {
+						continue;
 					}
+
+					AudioSource source = sourceInfo.Source;
+
+					float deltaVolume = sourceInfo.VolumeFluctuationSpeed * Time.deltaTime;
+					float newVolume = source.volume + deltaVolume;
+
+					// Fade in.
+					if (sourceInfo.VolumeFluctuationSpeed > 0.0f) {
+						float todoMaxVolume = 1.0f;
+						if (newVolume >= todoMaxVolume) {
+							source.volume = todoMaxVolume;
+							sourceInfo.VolumeFluctuationSpeed = 0.0f;
+						}
+						else {
+							source.volume = newVolume;
+						}
+					}
+					// Fade out.
+					else {
+						if (newVolume <= 0.0f) {
+							source.volume = 0.0f;
+							source.Stop ();
+							sourceInfo.VolumeFluctuationSpeed = 0.0f;
+						}
+						else {
+							source.volume = newVolume;
+						}
+					}
+				}
+			}
+
+			// Clean up finished sounds.
+			{
+				for (int i = 0; i < _activeSourceInfoIndices.Count; /*i++*/) {
+					int sourceInfoIndex = _activeSourceInfoIndices [i];
+					AudioSourceInfo sourceInfo = _sourceInfos [sourceInfoIndex];
+					AudioSource source = sourceInfo.Source;
+					if (!source.isPlaying) {
+						// Reset state.
+						sourceInfo.Reset ();
+
+						// Remove from active pool.
+						{
+							// Move last element to avoid array copy.
+							int lastIndex = _activeSourceInfoIndices.Count - 1;
+							_activeSourceInfoIndices [i] = _activeSourceInfoIndices [lastIndex];
+							_activeSourceInfoIndices.RemoveAt (lastIndex);
+						}
+
+						// Add back to available pools.
+						_availableSourceInfoIndices.Add (sourceInfoIndex);
+						ReturnSourceToPool (source);
+
+						Uzu.Dbg.Assert (_availableSourceInfoIndices.Count == _availableSources.Count);
+
+						continue;
+					}
+					
+					i++;
 				}
 			}
 		}
