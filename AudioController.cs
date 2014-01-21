@@ -23,12 +23,15 @@ namespace Uzu
 	/// Handles playing of audio.
 	/// </summary>
 	public class AudioController : BaseBehaviour
-	{		
-		public struct PlaySettings
+	{
+		/// <summary>
+		/// Options passed when playing a sound.
+		/// </summary>
+		public struct PlayOptions
 		{
 			public bool Loop;
 			public Vector3 Position;
-//			public float Volume;
+			public float MaxVolume;
 			public float FadeInTime;
 		}
 		
@@ -68,7 +71,7 @@ namespace Uzu
 			return GetSourceInfo (handle) != null;
 		}
 		
-		public AudioHandle Play (string clipId, PlaySettings settings)
+		public AudioHandle Play (string clipId, PlayOptions options)
 		{
 			AudioClip clip = GetClip (clipId);
 			if (clip != null) {
@@ -77,16 +80,16 @@ namespace Uzu
 				if (sourceInfo != null) {
 					AudioSource source = sourceInfo.Source;
 					source.clip = clip;
-					source.loop = settings.Loop;
-					source.transform.localPosition = settings.Position;
+					source.loop = options.Loop;
+					source.transform.localPosition = options.Position;
 
-					// TODO: ? use default channel volume
-					//source.volume = settings.Volume;
-
-					if (settings.FadeInTime > 0.0f) {
-						float todoVolumeMax = 1.0f;
-						sourceInfo.VolumeFluctuationSpeed = todoVolumeMax / settings.FadeInTime;
+					if (options.FadeInTime > 0.0f) {
+						sourceInfo.MaxVolume = options.MaxVolume;
+						sourceInfo.VolumeFluctuationSpeed = sourceInfo.MaxVolume / options.FadeInTime;
 						source.volume = 0.0f;
+					}
+					else {
+						source.volume = options.MaxVolume;
 					}
 
 					source.Play ();
@@ -120,6 +123,24 @@ namespace Uzu
 				}
 			}
 		}
+
+		public void SetPitch (AudioHandle handle, float pitch)
+		{
+			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
+			if (sourceInfo != null) {
+				sourceInfo.Source.pitch = pitch;
+			}
+		}
+
+		public float GetPitch (AudioHandle handle)
+		{
+			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
+			if (sourceInfo != null) {
+				return sourceInfo.Source.pitch;
+			}
+
+			return 1.0f;
+		}
 		
 		#region Implementation.
 		private AudioLoader _audioLoader;
@@ -141,7 +162,14 @@ namespace Uzu
 			/// </summary>
 			public AudioSource Source;
 
-//			public int ChannelIndex;
+			/// <summary>
+			/// The maximum volume this sound can reach.
+			/// </summary>
+			public float MaxVolume;
+
+			/// <summary>
+			/// Rate of change of volume during fade effects.
+			/// </summary>
 			public float VolumeFluctuationSpeed;
 
 			public AudioSourceInfo ()
@@ -151,8 +179,10 @@ namespace Uzu
 
 			public void Reset ()
 			{
+				HandleId = AudioHandle.INVALID_ID;
 				Source = null;
 				VolumeFluctuationSpeed = 0.0f;
+				MaxVolume = 1.0f;
 			}
 		}
 
@@ -261,9 +291,8 @@ namespace Uzu
 
 					// Fade in.
 					if (sourceInfo.VolumeFluctuationSpeed > 0.0f) {
-						float todoMaxVolume = 1.0f;
-						if (newVolume >= todoMaxVolume) {
-							source.volume = todoMaxVolume;
+						if (newVolume >= sourceInfo.MaxVolume) {
+							source.volume = sourceInfo.MaxVolume;
 							sourceInfo.VolumeFluctuationSpeed = 0.0f;
 						}
 						else {
