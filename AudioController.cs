@@ -66,6 +66,14 @@ namespace Uzu
 			}
 		}
 
+		/// <summary>
+		/// Gets the # of available audio sources remaining.
+		/// </summary>
+		public int GetAvailableSourceCount ()
+		{
+			return _availableSources.Count;
+		}
+
 		public bool IsHandleValid (AudioHandle handle)
 		{
 			return GetSourceInfo (handle) != null;
