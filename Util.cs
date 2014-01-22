@@ -43,6 +43,45 @@ namespace Uzu
 			return (T)comp;
 		}
 
+#if UNITY_EDITOR
+		/// <summary>
+		/// Saves a screenshot to the specified path, or a default path
+		/// under $ProjectBaseDir/Screenshots/
+		/// </summary>
+		public static void CaptureScreenshot (string fileName = null)
+		{
+			if (string.IsNullOrEmpty (fileName)) {
+				fileName = GetDefaultScreenshotPath ();
+			}
+			
+			Debug.Log("Saving screenshot to: " + fileName);
+			Application.CaptureScreenshot(fileName);
+		}
+
+		private static string GetDefaultScreenshotPath ()
+		{
+			string fileName;
+			int count = 0;
+
+			// Create base directory if necessary.
+			const string basePath = "Screenshots/";
+			if (!System.IO.Directory.Exists(basePath)) {
+				System.IO.Directory.CreateDirectory(basePath);
+			}
+			
+			// Use the time as the file name.
+			System.DateTime time = System.DateTime.Now;
+			string timeStr = time.ToString("yyyy-MM-dd-HH-mm-ss-");
+			
+			do {
+				fileName = basePath + timeStr + count + ".png";
+				count++;
+			} while (System.IO.File.Exists(fileName));
+
+			return fileName;
+		}
+#endif // UNITY_EDITOR
+
 #if UNITY_IPHONE
 		/// <summary>
 		/// Gets the iOS major version #.
