@@ -41,6 +41,9 @@ namespace Uzu
 			xform.position = pos;
 			xform.localScale = new Vector3 (radius2, radius2, radius2);
 			dbgSphere.renderer.material.color = color;
+
+			// Disable physics.
+			dbgSphere.GetComponent <SphereCollider> ().enabled = false;
 			
 			// Set parent so that debug objects don't clutter up scene.
 			xform.parent = GetDebugParentGameObject ().transform;
