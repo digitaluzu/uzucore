@@ -121,7 +121,12 @@ namespace Uzu
 			return false;
 		}
 
-		public void Stop (AudioHandle handle, float fadeOutTime = 0.0f)
+		public void Stop (AudioHandle handle)
+		{
+			Stop (handle, 0.0f);
+		}
+
+		public void Stop (AudioHandle handle, float fadeOutTime)
 		{
 			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
 			if (sourceInfo != null) {
