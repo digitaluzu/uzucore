@@ -99,6 +99,22 @@ namespace Uzu
 		{
 			return RadiansToDirectionVector2 (Random.value * TWO_PI);
 		}
+
+		/// <summary>
+		/// Generates a random number within the given range.
+		/// </summary>
+		public static float RandomRange (Vector2 range)
+		{
+			return Random.Range (range.x, range.y);
+		}
+
+		/// <summary>
+		/// Returns a random sign (-1 or 1).
+		/// </summary>
+		public static int RandomSign ()
+		{
+			return (Random.Range (0, 2) == 0) ? -1 : 1;
+		}
 		
 		/// <summary>
 		/// Converts an angle into a direction around a unit circle.
