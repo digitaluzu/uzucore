@@ -78,9 +78,27 @@ namespace Uzu
 		{
 			return GetSourceInfo (handle) != null;
 		}
+
+		/// <summary>
+		/// Mute the controller.
+		/// </summary>
+		public bool IsMuted {
+			get { return _isMuted; }
+			set {
+				_isMuted = value;
+
+				// TODO: correct implementation will preserve settings of existing sounds.
+				StopAll ();
+			}
+		}
 		
 		public AudioHandle Play (string clipId, PlayOptions options)
 		{
+			// TODO: correct implementation will preserve settings of existing sounds (volume = 0).
+			if (IsMuted) {
+				return new AudioHandle ();
+			}
+
 			AudioClip clip = GetClip (clipId);
 			if (clip != null) {
 				AudioHandle handle = GetSource ();
@@ -139,6 +157,14 @@ namespace Uzu
 			}
 		}
 
+		public void StopAll ()
+		{
+			for (int i = 0; i < _activeSourceInfoIndices.Count; i++) {
+				AudioSourceInfo sourceInfo = _sourceInfos [_activeSourceInfoIndices [i]];
+				sourceInfo.Source.Stop ();
+			}
+		}
+
 		public string GetClipId (AudioHandle handle)
 		{
 			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
@@ -173,6 +199,7 @@ namespace Uzu
 		private FixedList<int> _availableSourceInfoIndices;
 		private FixedList<int> _activeSourceInfoIndices;
 		private FixedList<AudioSourceInfo> _sourceInfos;
+		private bool _isMuted;
 
 		private class AudioSourceInfo
 		{
