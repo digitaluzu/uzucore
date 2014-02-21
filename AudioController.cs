@@ -80,25 +80,15 @@ namespace Uzu
 		}
 
 		/// <summary>
-		/// Mute the controller.
+		/// Mute.
 		/// </summary>
 		public bool IsMuted {
 			get { return _isMuted; }
-			set {
-				_isMuted = value;
-
-				// TODO: correct implementation will preserve settings of existing sounds.
-				StopAll ();
-			}
+			set { _isMuted = value; }
 		}
 		
 		public AudioHandle Play (string clipId, PlayOptions options)
 		{
-			// TODO: correct implementation will preserve settings of existing sounds (volume = 0).
-			if (IsMuted) {
-				return new AudioHandle ();
-			}
-
 			AudioClip clip = GetClip (clipId);
 			if (clip != null) {
 				AudioHandle handle = GetSource ();
@@ -112,12 +102,13 @@ namespace Uzu
 					sourceInfo.ClipId = clipId;
 					sourceInfo.TargetVolume = options.Volume;
 
-					if (options.FadeInTime > 0.0f) {
+					if (options.FadeInTime > 0.0f &&
+					    !_isMuted) {
 						sourceInfo.VolumeFluctuationSpeed = sourceInfo.TargetVolume / options.FadeInTime;
 						source.volume = 0.0f;
 					}
 					else {
-						source.volume = sourceInfo.TargetVolume;
+						SetSourceVolume (sourceInfo, sourceInfo.TargetVolume);
 					}
 
 					source.Play ();
@@ -148,7 +139,8 @@ namespace Uzu
 		{
 			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
 			if (sourceInfo != null) {
-				if (fadeOutTime > 0.0f) {
+				if (fadeOutTime > 0.0f &&
+				    !_isMuted) {
 					sourceInfo.VolumeFluctuationSpeed = -sourceInfo.Source.volume / fadeOutTime;
 					sourceInfo.TargetVolume = 0.0f;
 				}
@@ -185,13 +177,14 @@ namespace Uzu
 		{
 			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
 			if (sourceInfo != null) {
-				if (duration > 0.0f) {
+				if (duration > 0.0f &&
+				    !_isMuted) {
 					float deltaVolume = volume - sourceInfo.Source.volume;
 					sourceInfo.VolumeFluctuationSpeed = deltaVolume / duration;
 					sourceInfo.TargetVolume = volume;
 				}
 				else {
-					sourceInfo.Source.volume = volume;
+					SetSourceVolume (sourceInfo, volume);
 				}
 			}
 		}
@@ -231,6 +224,7 @@ namespace Uzu
 		private FixedList<int> _activeSourceInfoIndices;
 		private FixedList<AudioSourceInfo> _sourceInfos;
 		private bool _isMuted;
+		private bool _wasMuted;
 
 		private class AudioSourceInfo
 		{
@@ -288,6 +282,18 @@ namespace Uzu
 			return HANDLE_ID_CNT++;
 		}
 		#endregion
+
+		private void SetSourceVolume (AudioSourceInfo sourceInfo, float volume)
+		{
+			if (_isMuted) {
+				sourceInfo.Source.volume = 0.0f;
+			}
+			else {
+				sourceInfo.Source.volume = volume;
+			}
+
+			sourceInfo.TargetVolume = volume;
+		}
 		
 		private AudioClip GetClip (string clipId)
 		{
@@ -434,6 +440,29 @@ namespace Uzu
 					
 					i++;
 				}
+			}
+
+			// Mute processing.
+			{
+				// Was there a change?
+				if (_isMuted != _wasMuted) {
+					if (_isMuted) {
+						// Mute all active sources.
+						for (int i = 0; i < _activeSourceInfoIndices.Count; i++) {
+							AudioSourceInfo sourceInfo = _sourceInfos [_activeSourceInfoIndices [i]];
+							sourceInfo.Source.volume = 0.0f;
+						}
+					}
+					else {
+						// Unmute all active sources.
+						for (int i = 0; i < _activeSourceInfoIndices.Count; i++) {
+							AudioSourceInfo sourceInfo = _sourceInfos [_activeSourceInfoIndices [i]];
+							sourceInfo.Source.volume = sourceInfo.TargetVolume;
+						}
+					}
+				}
+
+				_wasMuted = _isMuted;
 			}
 		}
 		#endregion
