@@ -31,7 +31,7 @@ namespace Uzu
 		{
 			public bool Loop;
 			public Vector3 Position;
-			public float MaxVolume;
+			public float Volume;
 			public float FadeInTime;
 		}
 		
@@ -110,14 +110,14 @@ namespace Uzu
 					source.transform.localPosition = options.Position;
 
 					sourceInfo.ClipId = clipId;
-					sourceInfo.MaxVolume = options.MaxVolume;
+					sourceInfo.TargetVolume = options.Volume;
 
 					if (options.FadeInTime > 0.0f) {
-						sourceInfo.VolumeFluctuationSpeed = sourceInfo.MaxVolume / options.FadeInTime;
+						sourceInfo.VolumeFluctuationSpeed = sourceInfo.TargetVolume / options.FadeInTime;
 						source.volume = 0.0f;
 					}
 					else {
-						source.volume = options.MaxVolume;
+						source.volume = sourceInfo.TargetVolume;
 					}
 
 					source.Play ();
@@ -150,6 +150,7 @@ namespace Uzu
 			if (sourceInfo != null) {
 				if (fadeOutTime > 0.0f) {
 					sourceInfo.VolumeFluctuationSpeed = -sourceInfo.Source.volume / fadeOutTime;
+					sourceInfo.TargetVolume = 0.0f;
 				}
 				else {
 					sourceInfo.Source.Stop ();
@@ -173,6 +174,36 @@ namespace Uzu
 			}
 
 			return string.Empty;
+		}
+
+		public void SetVolume (AudioHandle handle, float volume)
+		{
+			SetVolume (handle, volume, 0.0f);
+		}
+
+		public void SetVolume (AudioHandle handle, float volume, float duration)
+		{
+			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
+			if (sourceInfo != null) {
+				if (duration > 0.0f) {
+					float deltaVolume = volume - sourceInfo.Source.volume;
+					sourceInfo.VolumeFluctuationSpeed = deltaVolume / duration;
+					sourceInfo.TargetVolume = volume;
+				}
+				else {
+					sourceInfo.Source.volume = volume;
+				}
+			}
+		}
+
+		public float GetVolume (AudioHandle handle)
+		{
+			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
+			if (sourceInfo != null) {
+				return sourceInfo.Source.volume;
+			}
+			
+			return 0.0f;
 		}
 
 		public void SetPitch (AudioHandle handle, float pitch)
@@ -222,7 +253,7 @@ namespace Uzu
 			/// <summary>
 			/// The maximum volume this sound can reach.
 			/// </summary>
-			public float MaxVolume;
+			public float TargetVolume;
 
 			/// <summary>
 			/// Rate of change of volume during fade effects.
@@ -240,7 +271,7 @@ namespace Uzu
 				ClipId = string.Empty;
 				Source = null;
 				VolumeFluctuationSpeed = 0.0f;
-				MaxVolume = 1.0f;
+				TargetVolume = 1.0f;
 			}
 		}
 
@@ -347,22 +378,25 @@ namespace Uzu
 					float deltaVolume = sourceInfo.VolumeFluctuationSpeed * Time.deltaTime;
 					float newVolume = source.volume + deltaVolume;
 
-					// Fade in.
+					// Increasing volume (fade in).
 					if (sourceInfo.VolumeFluctuationSpeed > 0.0f) {
-						if (newVolume >= sourceInfo.MaxVolume) {
-							source.volume = sourceInfo.MaxVolume;
+						if (newVolume >= sourceInfo.TargetVolume) {
+							source.volume = sourceInfo.TargetVolume;
 							sourceInfo.VolumeFluctuationSpeed = 0.0f;
 						}
 						else {
 							source.volume = newVolume;
 						}
 					}
-					// Fade out.
+					// Decreasing volume (fade out).
 					else {
-						if (newVolume <= 0.0f) {
-							source.volume = 0.0f;
-							source.Stop ();
+						if (newVolume <= sourceInfo.TargetVolume) {
+							source.volume = sourceInfo.TargetVolume;
 							sourceInfo.VolumeFluctuationSpeed = 0.0f;
+
+							if (Mathf.Approximately(source.volume, 0.0f)) {
+								source.Stop ();
+							}
 						}
 						else {
 							source.volume = newVolume;
