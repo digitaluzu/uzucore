@@ -10,6 +10,20 @@ namespace Uzu
 	public class GameObjectPool : BaseBehaviour
 	{
 		/// <summary>
+		/// Can we spawn any objects w/o having to re-allocate?
+		/// </summary>
+		public bool HasAvailableObject {
+			get { return AvailableObjectCount != 0; }
+		}
+
+		/// <summary>
+		/// The total # of objects that are available to use w/o having to re-allocate.
+		/// </summary>
+		public int AvailableObjectCount {
+			get { return _availableObjects.Count; }
+		}
+
+		/// <summary>
 		/// The total # of objects that are currently being utilized.
 		/// </summary>
 		public int ActiveObjectCount {
