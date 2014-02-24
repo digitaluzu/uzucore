@@ -15,6 +15,25 @@ namespace Uzu
 	{
 		#region Pooling.
 		private GameObjectPool _ownerPool;
+
+		/// <summary>
+		/// Allow user to manually set the pool this object belongs to.
+		/// Only allowed to set the pool manually if the object hasn't
+		/// previously belonged to a pool.
+		/// This is useful for manually placing objects at the start of the
+		/// scene, and having them unspawn into a pool to be re-used later
+		/// for automatic placement.
+		/// </summary>
+		protected GameObjectPool OwnerPool {
+			set {
+				if (value == null || _ownerPool != null) {
+					Debug.LogError ("Invalid owner pool. Only allowed to set pool manually if pool had never been set before.");
+					return;
+				}
+
+				_ownerPool = value;
+			}
+		}
 		
 		/// <summary>
 		/// Called when this object is initially allocated and added to a pool.

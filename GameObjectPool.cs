@@ -102,11 +102,17 @@ namespace Uzu
 			PooledBehaviour targetComponent = targetGO.GetComponent<PooledBehaviour> ();
 			
 	#if UNITY_EDITOR
-			if (targetComponent == null || !_allObjects.Contains(targetComponent)) {
+			if (targetComponent == null) {
 				Debug.LogError("Attempting to Unspawn an object not belonging to this pool!");
 				return;
 			}
 	#endif // UNITY_EDITOR
+
+			// If the object has been manually assigned to this pool,
+			// add it to our master list.
+			if (!_allObjects.Contains(targetComponent)) {
+				_allObjects.Add (targetComponent);
+			}
 
 			// Reset parent in case the object was moved by the user.
 			targetComponent.CachedXform.parent = _poolParentTransform;
