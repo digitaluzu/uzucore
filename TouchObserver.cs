@@ -118,6 +118,7 @@ namespace Uzu
 				}
 			}
 
+#if UNITY_EDITOR || UNITY_WEBPLAYER
 			// Mouse.
 			{
 				const int LMB = 0;
@@ -151,6 +152,7 @@ namespace Uzu
 					}
 				}
 			}
+#endif
 			
 			// Deactivate all active trackers that weren't updated this frame so they can be re-used.
 			// Ideally, TouchPhase.Ended could be used to do this, but it is not reliable.
