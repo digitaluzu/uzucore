@@ -11,11 +11,26 @@ namespace Uzu
 	/// </summary>
 	public class TouchObserver
 	{
-		public delegate void OnTouchBeginDelegate (Touch touch);
+		/// <summary>
+		/// Wrapper class for encapsulating touch data whether it
+		/// comes from an actual touch or a mouse or some other input.
+		/// Allows the application to handle the input without knowing
+		/// from what source it came from.
+		/// </summary>
+		public struct TouchWrapper
+		{
+			public int touchId;
+			public Vector2 position;
+			public float deltaTime;
+		}
+
+		public const int LMB_TOUCH_ID = -1;
+
+		public delegate void OnTouchBeginDelegate (TouchWrapper touch);
 	
-		public delegate void OnTouchUpdateDelegate (Touch touch);
+		public delegate void OnTouchUpdateDelegate (TouchWrapper touch);
 	
-		public delegate void OnTouchEndDelegate (int fingerId, Vector2 lastPosition);
+		public delegate void OnTouchEndDelegate (int touchId, Vector2 lastPosition);
 	
 		public OnTouchBeginDelegate OnTouchBegin { get; set; }
 	
@@ -72,6 +87,7 @@ namespace Uzu
 			int touchCount = Input.touches.Length;
 			for (int i = 0; i < touchCount; i++) {
 				Touch touch = Input.touches [i];
+				TouchWrapper touchWrapper = TouchToTouchWrapper (touch);
 				
 				// Are we already tracking this finger?
 				TouchTracker tracker = GetExistingTracker (touch.fingerId);
@@ -90,13 +106,47 @@ namespace Uzu
 					if (tracker == null) {				
 						tracker = GetNewTracker ();
 						if (tracker != null) {
-							DoTrackingBegin (tracker, touch);
+							DoTrackingBegin (tracker, touchWrapper);
 						}
 					}
 				}
 				else {
 					// Update the tracker.
 					if (tracker != null) {
+						DoTrackingUpdate (tracker, touchWrapper);
+					}
+				}
+			}
+
+			// Mouse.
+			{
+				const int LMB = 0;
+				if (Input.GetMouseButtonDown (LMB)) {
+					TouchTracker tracker = GetExistingTracker (LMB_TOUCH_ID);
+
+					if (tracker != null) {
+						Debug.LogWarning ("LMB pressed down twice without an up!?");
+						DoTrackingEnd (tracker);
+					}
+
+					tracker = GetNewTracker ();
+					if (tracker != null) {
+						_LMBDownStartTime = Time.time;
+						TouchWrapper touch = LMBToTouchWrapper ();
+
+						DoTrackingBegin (tracker, touch);
+					}
+				}
+				else if (Input.GetMouseButtonUp (LMB)) {
+					TouchTracker tracker = GetExistingTracker (LMB_TOUCH_ID);
+					if (tracker != null) {
+						DoTrackingEnd (tracker);
+					}
+				}
+				else if (Input.GetMouseButton (LMB)) {
+					TouchTracker tracker = GetExistingTracker (LMB_TOUCH_ID);
+					if (tracker != null) {
+						TouchWrapper touch = LMBToTouchWrapper ();
 						DoTrackingUpdate (tracker, touch);
 					}
 				}
@@ -143,15 +193,15 @@ namespace Uzu
 				get { return _lastPosition; }
 			}
 			
-			public void BeginTracking (Touch touch)
+			public void BeginTracking (TouchWrapper touch)
 			{
 				_isActive = true;
 				_isDirty = true;
-				_fingerId = touch.fingerId;
+				_fingerId = touch.touchId;
 				_lastPosition = touch.position;
 			}
 			
-			public void Update (Touch touch)
+			public void Update (TouchWrapper touch)
 			{
 				_isDirty = true;
 				_lastPosition = touch.position;
@@ -162,8 +212,28 @@ namespace Uzu
 				_isActive = false;
 			}
 		}
+
+		private static float _LMBDownStartTime;
+		
+		private static TouchWrapper TouchToTouchWrapper (Touch t)
+		{
+			TouchWrapper touch = new TouchWrapper ();
+			touch.position = t.position;
+			touch.touchId = t.fingerId;
+			touch.deltaTime = t.deltaTime;
+			return touch;
+		}
+		
+		private static TouchWrapper LMBToTouchWrapper ()
+		{
+			TouchWrapper touch = new TouchWrapper ();
+			touch.position = Input.mousePosition;
+			touch.touchId = LMB_TOUCH_ID;
+			touch.deltaTime = Time.time - _LMBDownStartTime;
+			return touch;
+		}
 	
-		private void DoTrackingBegin (TouchTracker tracker, Touch touch)
+		private void DoTrackingBegin (TouchTracker tracker, TouchWrapper touch)
 		{
 			tracker.BeginTracking (touch);
 			if (OnTouchBegin != null) {
@@ -171,7 +241,7 @@ namespace Uzu
 			}
 		}
 		
-		private void DoTrackingUpdate (TouchTracker tracker, Touch touch)
+		private void DoTrackingUpdate (TouchTracker tracker, TouchWrapper touch)
 		{
 			tracker.Update (touch);
 			if (OnTouchUpdate != null) {
