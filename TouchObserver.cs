@@ -214,8 +214,6 @@ namespace Uzu
 				_isActive = false;
 			}
 		}
-
-		private static float _LMBDownStartTime;
 		
 		private static TouchWrapper TouchToTouchWrapper (Touch t)
 		{
@@ -225,7 +223,10 @@ namespace Uzu
 			touch.deltaTime = t.deltaTime;
 			return touch;
 		}
-		
+
+#if UNITY_EDITOR || UNITY_WEBPLAYER
+		private static float _LMBDownStartTime;
+
 		private static TouchWrapper LMBToTouchWrapper ()
 		{
 			TouchWrapper touch = new TouchWrapper ();
@@ -234,6 +235,7 @@ namespace Uzu
 			touch.deltaTime = Time.time - _LMBDownStartTime;
 			return touch;
 		}
+#endif
 	
 		private void DoTrackingBegin (TouchTracker tracker, TouchWrapper touch)
 		{
