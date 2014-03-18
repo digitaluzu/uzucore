@@ -36,6 +36,13 @@ namespace Uzu
 		public int Capacity {
 			get { return _allObjects.Count; }
 		}
+
+		/// <summary>
+		/// Is the pool allowed to grow if it needs to spawn new objects?
+		/// </summary>
+		public bool DoesGrow {
+			get { return _doesGrow; }
+		}
 		
 		public List<GameObject> ActiveObjects {
 			get {
