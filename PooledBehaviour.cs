@@ -56,6 +56,9 @@ namespace Uzu
 			if (_ownerPool != null) {
 				_ownerPool.Unspawn (this.gameObject);
 			}
+			else {
+				Debug.LogWarning ("Unable to unspawn - owner pool is null.");
+			}
 		}
 		
 		/// <summary>
