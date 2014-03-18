@@ -11,6 +11,11 @@ namespace Uzu
 		private FixedList <float> _weights;
 		private float _totalWeight;
 
+		public WeightedRandomSelector ()
+		{
+
+		}
+
 		public WeightedRandomSelector (FixedList <float> weights)
 		{
 			Reinitialize (weights);
