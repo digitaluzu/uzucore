@@ -82,6 +82,29 @@ namespace Uzu
 		}
 #endif // UNITY_EDITOR
 
+		/// <summary>
+		/// Gets the URL to rate the app.
+		/// </summary>
+		public static string GetRateAppURL (string appId)
+		{
+#if UNITY_IPHONE
+			// References:
+			//  - http://stackoverflow.com/questions/18905686/itunes-review-url-and-ios-7-ask-user-to-rate-our-app-appstore-show-a-blank-pag
+			//  - http://stackoverflow.com/questions/433907/how-to-link-to-apps-on-the-app-store
+			if (GetMajorVersion_iOS () >= 7) {
+				// From iOS 7, 'viewContentsUserReviews' is no longer valid, so you cannot redirect the user directly to the ratings page.
+				return "itms-apps://itunes.apple.com/app/id" + appId + "?at=10l6dK";
+			}
+			else {
+				return "http://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=" + appId + "&onlyLatestVersion=false&type=Purple+Software";
+			}
+#elif UZU_GOOGLEPLAY
+			return "http://play.google.com/store/apps/details?id=" + appId;			
+#else 
+			#error Unhandled platform.
+#endif
+		}
+
 #if UNITY_IPHONE
 		/// <summary>
 		/// Gets the iOS major version #.
