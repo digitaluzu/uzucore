@@ -100,8 +100,8 @@ namespace Uzu
 			}
 #elif UZU_GOOGLEPLAY
 			return "http://play.google.com/store/apps/details?id=" + appId;			
-#else 
-			#error Unhandled platform.
+#else
+			return string.Empty;
 #endif
 		}
 
