@@ -88,18 +88,32 @@ namespace Uzu
 		public static string GetRateAppURL (string appId)
 		{
 #if UNITY_IPHONE
-			// References:
-			//  - http://stackoverflow.com/questions/18905686/itunes-review-url-and-ios-7-ask-user-to-rate-our-app-appstore-show-a-blank-pag
-			//  - http://stackoverflow.com/questions/433907/how-to-link-to-apps-on-the-app-store
 			if (GetMajorVersion_iOS () >= 7) {
 				// From iOS 7, 'viewContentsUserReviews' is no longer valid, so you cannot redirect the user directly to the ratings page.
 				return "itms-apps://itunes.apple.com/app/id" + appId + "?at=10l6dK";
 			}
 			else {
-				return "http://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=" + appId + "&onlyLatestVersion=false&type=Purple+Software";
+				return GetAppURL (appId);
 			}
 #elif UZU_GOOGLEPLAY
-			return "http://play.google.com/store/apps/details?id=" + appId;			
+			return GetAppURL (appId);
+#else
+			return string.Empty;
+#endif
+		}
+
+		/// <summary>
+		/// Gets the app store URL.
+		/// </summary>
+		public static string GetAppURL (string appId)
+		{
+#if UNITY_IPHONE
+			// References:
+			//  - http://stackoverflow.com/questions/18905686/itunes-review-url-and-ios-7-ask-user-to-rate-our-app-appstore-show-a-blank-pag
+			//  - http://stackoverflow.com/questions/433907/how-to-link-to-apps-on-the-app-store
+			return "itms-apps://itunes.apple.com/app/id" + appId + "?at=10l6dK";
+#elif UZU_GOOGLEPLAY
+			return "http://play.google.com/store/apps/details?id=" + appId;
 #else
 			return string.Empty;
 #endif
