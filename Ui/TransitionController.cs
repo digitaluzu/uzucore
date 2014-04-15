@@ -62,22 +62,30 @@ namespace Uzu
 		private Dictionary<string, TransitionInterface> _transitions = new Dictionary<string, TransitionInterface> ();
 		private TransitionInterface _activeTransition;
 		private System.Action _activeTransitionOnEndCallback;
+		private bool _callEndActiveTransitionNextFrame;
 		
 		private void Update ()
 		{
 			if (_activeTransition == null) {
 				return;
 			}
-			
-			// Update the currently active transition.
-			bool isFinished = _activeTransition.OnUpdate ();
-			if (isFinished) {
+
+			if (_callEndActiveTransitionNextFrame) {
 				EndActiveTransition ();
+			}
+			else {
+				// Update the currently active transition.
+				bool isFinished = _activeTransition.OnUpdate ();
+				if (isFinished) {
+					// Delay the actual 'end' event until the next frame.
+					_callEndActiveTransitionNextFrame = true;
+				}
 			}
 		}
 		
 		private void EndActiveTransition ()
 		{
+			_callEndActiveTransitionNextFrame = false;
 			_activeTransition = null;
 			
 			// Trigger callback.
