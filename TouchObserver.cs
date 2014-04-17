@@ -25,6 +25,7 @@ namespace Uzu
 		}
 
 		public const int LMB_TOUCH_ID = -1;
+		public const int RMB_TOUCH_ID = -2;
 
 		public delegate void OnTouchBeginDelegate (TouchWrapper touch);
 	
@@ -118,39 +119,11 @@ namespace Uzu
 				}
 			}
 
-#if UNITY_EDITOR || UNITY_WEBPLAYER
+#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WEBPLAYER
 			// Mouse.
 			{
-				const int LMB = 0;
-				if (Input.GetMouseButtonDown (LMB)) {
-					TouchTracker tracker = GetExistingTracker (LMB_TOUCH_ID);
-
-					if (tracker != null) {
-						Debug.LogWarning ("LMB pressed down twice without an up!?");
-						DoTrackingEnd (tracker);
-					}
-
-					tracker = GetNewTracker ();
-					if (tracker != null) {
-						_LMBDownStartTime = Time.time;
-						TouchWrapper touch = LMBToTouchWrapper ();
-
-						DoTrackingBegin (tracker, touch);
-					}
-				}
-				else if (Input.GetMouseButtonUp (LMB)) {
-					TouchTracker tracker = GetExistingTracker (LMB_TOUCH_ID);
-					if (tracker != null) {
-						DoTrackingEnd (tracker);
-					}
-				}
-				else if (Input.GetMouseButton (LMB)) {
-					TouchTracker tracker = GetExistingTracker (LMB_TOUCH_ID);
-					if (tracker != null) {
-						TouchWrapper touch = LMBToTouchWrapper ();
-						DoTrackingUpdate (tracker, touch);
-					}
-				}
+				DoMouseProcessing (0, LMB_TOUCH_ID, ref _LMBDownStartTime, LMBToTouchWrapper);
+				DoMouseProcessing (1, RMB_TOUCH_ID, ref _RMBDownStartTime, RMBToTouchWrapper);
 			}
 #endif
 			
@@ -160,6 +133,39 @@ namespace Uzu
 				TouchTracker tracker = _trackers [i];
 				if (tracker.IsActive && !tracker.IsDirty) {
 					DoTrackingEnd (tracker);
+				}
+			}
+		}
+
+		private void DoMouseProcessing (int buttonIndex, int touchId, ref float downStartTime, System.Func <TouchWrapper> touchWrapperFunc)
+		{
+			if (Input.GetMouseButtonDown (buttonIndex)) {
+				TouchTracker tracker = GetExistingTracker (touchId);
+
+				if (tracker != null) {
+					Debug.LogWarning ("Mouse button [" + buttonIndex + "] pressed down twice without an up!?");
+					DoTrackingEnd (tracker);
+				}
+
+				tracker = GetNewTracker ();
+				if (tracker != null) {
+					downStartTime = Time.time;
+					TouchWrapper touch = touchWrapperFunc ();
+
+					DoTrackingBegin (tracker, touch);
+				}
+			}
+			else if (Input.GetMouseButtonUp (buttonIndex)) {
+				TouchTracker tracker = GetExistingTracker (touchId);
+				if (tracker != null) {
+					DoTrackingEnd (tracker);
+				}
+			}
+			else if (Input.GetMouseButton (buttonIndex)) {
+				TouchTracker tracker = GetExistingTracker (touchId);
+				if (tracker != null) {
+					TouchWrapper touch = touchWrapperFunc ();
+					DoTrackingUpdate (tracker, touch);
 				}
 			}
 		}
@@ -224,8 +230,9 @@ namespace Uzu
 			return touch;
 		}
 
-#if UNITY_EDITOR || UNITY_WEBPLAYER
+#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WEBPLAYER
 		private static float _LMBDownStartTime;
+		private static float _RMBDownStartTime;
 
 		private static TouchWrapper LMBToTouchWrapper ()
 		{
@@ -233,6 +240,15 @@ namespace Uzu
 			touch.position = Input.mousePosition;
 			touch.touchId = LMB_TOUCH_ID;
 			touch.deltaTime = Time.time - _LMBDownStartTime;
+			return touch;
+		}
+
+		private static TouchWrapper RMBToTouchWrapper ()
+		{
+			TouchWrapper touch = new TouchWrapper ();
+			touch.position = Input.mousePosition;
+			touch.touchId = RMB_TOUCH_ID;
+			touch.deltaTime = Time.time - _RMBDownStartTime;
 			return touch;
 		}
 #endif
