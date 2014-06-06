@@ -117,15 +117,21 @@ namespace Uzu
 		/// </summary>
 		public bool Contains (T item)
 		{
-			if (_buffer == null) {
-				return false;
-			}
+			return FindIndex (item) != -1;
+		}
+
+		/// <summary>
+		/// Finds the index of the specified item within the list.
+		/// If not found, return -1.
+		/// </summary>
+		public int FindIndex (T item)
+		{
 			for (int i = 0; i < _size; ++i) {
 				if (_buffer [i].Equals (item)) {
-					return true;
+					return i;
 				}
 			}
-			return false;
+			return -1;
 		}
 	
 		/// <summary>
