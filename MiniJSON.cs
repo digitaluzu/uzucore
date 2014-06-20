@@ -32,7 +32,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace UzuMiniJSON {
+namespace Uzu
+{
 	// Example usage:
 	//
 	//  using UnityEngine;
@@ -73,7 +74,7 @@ namespace UzuMiniJSON {
 	/// JSON uses Arrays and Objects. These correspond here to the datatypes IList and IDictionary.
 	/// All numbers are parsed to doubles.
 	/// </summary>
-	public static class Json {
+	public static class MiniJSON {
 		/// <summary>
 		/// Parses the string json into a value
 		/// </summary>
