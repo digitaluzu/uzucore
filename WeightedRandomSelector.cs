@@ -8,7 +8,7 @@ namespace Uzu
 	/// </summary>
 	public class WeightedRandomSelector
 	{
-		private FixedList <float> _weights;
+		private float[] _weights;
 		private float _totalWeight;
 
 		public WeightedRandomSelector ()
@@ -16,7 +16,7 @@ namespace Uzu
 
 		}
 
-		public WeightedRandomSelector (FixedList <float> weights)
+		public WeightedRandomSelector (float[] weights)
 		{
 			Reinitialize (weights);
 		}
@@ -26,14 +26,14 @@ namespace Uzu
 		/// This allows the selector object to be re-used without
 		/// having to re-allocate a new one.
 		/// </summary>
-		public void Reinitialize (FixedList <float> weights)
+		public void Reinitialize (float[] weights)
 		{
 			_weights = weights;
 			_totalWeight = 0.0f;
 
 			// Calculate total weight.
 			{
-				for (int i = 0; i < _weights.Count; i++) {
+				for (int i = 0; i < _weights.Length; i++) {
 					_totalWeight += _weights [i];
 				}
 			}
@@ -47,7 +47,7 @@ namespace Uzu
 		{
 			// All weights are zero.
 			if (Mathf.Approximately(_totalWeight, 0.0f)) {
-				return _weights.Count;
+				return _weights.Length;
 			}
 			
 			float rnd = Random.value * _totalWeight;
@@ -57,7 +57,7 @@ namespace Uzu
 				rnd *= 0.5f;
 			}
 			
-			for (int i = 0; i < _weights.Count; i++) {
+			for (int i = 0; i < _weights.Length; i++) {
 				rnd -= _weights [i];
 				if (rnd < 0.0f) {
 					return i;
@@ -66,7 +66,7 @@ namespace Uzu
 
 			// Should never get here.
 			Debug.LogWarning ("Unable to calculate weighted random.");
-			return _weights.Count;
+			return _weights.Length;
 		}
 	}
 }
