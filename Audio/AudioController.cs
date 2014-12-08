@@ -18,7 +18,7 @@ namespace Uzu
 		/// </summary>
 		public AudioLoader AudioLoader { get; set; }
 	}
-	
+
 	/// <summary>
 	/// Handles playing of audio.
 	/// </summary>
@@ -34,7 +34,7 @@ namespace Uzu
 			public float Volume;
 			public float FadeInTime;
 		}
-		
+
 		/// <summary>
 		/// Initializes the audio controller.
 		/// </summary>
@@ -58,9 +58,9 @@ namespace Uzu
 					_sourceInfos.Add (new AudioSourceInfo ());
 				}
 			}
-			
+
 			_audioLoader = config.AudioLoader;
-			
+
 			if (_audioLoader == null) {
 				Debug.LogError ("AudioLoader not set!");
 			}
@@ -86,7 +86,7 @@ namespace Uzu
 			get { return _isMuted; }
 			set { _isMuted = value; }
 		}
-		
+
 		public AudioHandle Play (string clipId, PlayOptions options)
 		{
 			AudioClip clip = GetClip (clipId);
@@ -119,7 +119,7 @@ namespace Uzu
 
 			return new AudioHandle ();
 		}
-		
+
 		public bool IsPlaying (AudioHandle handle)
 		{
 			AudioSourceInfo sourceInfo = GetSourceInfo (handle);
@@ -195,7 +195,7 @@ namespace Uzu
 			if (sourceInfo != null) {
 				return sourceInfo.Source.volume;
 			}
-			
+
 			return 0.0f;
 		}
 
@@ -216,7 +216,7 @@ namespace Uzu
 
 			return 1.0f;
 		}
-		
+
 		#region Implementation.
 		private AudioLoader _audioLoader;
 		private FixedList<AudioSource> _availableSources;
@@ -294,22 +294,22 @@ namespace Uzu
 
 			sourceInfo.TargetVolume = volume;
 		}
-		
+
 		private AudioClip GetClip (string clipId)
 		{
 			if (_audioLoader == null) {
 				Debug.LogWarning ("AudioLoader not registered.");
 				return null;
 			}
-			
+
 			AudioClip clip = _audioLoader.GetClip (clipId);
 			if (clip == null) {
 				Debug.LogWarning ("AudioClip id [" + clipId + "] not found.");
 			}
-			
+
 			return clip;
 		}
-		
+
 		private AudioHandle GetSource ()
 		{
 			if (_availableSourceInfoIndices.Count > 0) {
@@ -334,7 +334,7 @@ namespace Uzu
 
 				return new AudioHandle (handleId, infoIndex);
 			}
-			
+
 			Debug.LogWarning ("No AudioSources available.");
 			return new AudioHandle ();
 		}
@@ -343,13 +343,13 @@ namespace Uzu
 		{
 			if (handle.Id != AudioHandle.INVALID_ID) {
 				AudioSourceInfo sourceInfo = _sourceInfos [handle.Index];
-				
+
 				// Verify handle integrity.
 				if (sourceInfo.HandleId == handle.Id) {
 					return sourceInfo;
 				}
 			}
-			
+
 			return null;
 		}
 
@@ -360,15 +360,39 @@ namespace Uzu
 			source.gameObject.SetActive (true);
 			return source;
 		}
-		
+
 		private void ReturnSourceToPool (AudioSource source)
 		{
 			source.gameObject.SetActive (false);
 			_availableSources.Add (source);
 		}
-		
+
+		private bool _isPaused = false;
+
+		private void OnApplicationPause(bool isPaused)
+		{
+			// Shyam Memo (2014.09.18):
+			// Fix for issue introduced in Unity 4.5.4 where one extra frame
+			// is executed after applicationWillResignActive event and
+			// before applicationDidEnterBackground event. Since one extra
+			// frame executes, the Update method of the AudioController is cleaning
+			// up all the sounds.
+			//
+			// To fix this, we pause the AudioController in OnApplicationPause (which
+			// is called immediately after applicationWillResignActive, but
+			// before the next frame is executed), and skip updating of the
+			// AudioController for this extra frame. When the app resumes,
+			// _isPaused becomes false, and the controller continues its updates.
+			_isPaused = isPaused;
+		}
+
 		private void Update ()
 		{
+			// Don't update if system is paused.
+			if (_isPaused) {
+				return;
+			}
+
 			// Fade in / out processing.
 			{
 				for (int i = 0; i < _activeSourceInfoIndices.Count; i++) {
@@ -437,7 +461,7 @@ namespace Uzu
 
 						continue;
 					}
-					
+
 					i++;
 				}
 			}
